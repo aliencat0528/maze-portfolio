@@ -1,0 +1,254 @@
+/* CRT 螢幕效果樣式 */
+
+/* 掃描線效果 */
+.crt-scanlines {
+  position: relative;
+}
+
+.crt-scanlines::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* CRT 螢幕容器 */
+.crt-screen {
+  background: #0a0a0a;
+  border-radius: 20px;
+  box-shadow:
+    inset 0 0 100px rgba(0, 0, 0, 0.9),
+    0 0 20px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 螢幕曲面效果 */
+.crt-screen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 80%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* 螢光文字效果 */
+.glow-text {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor;
+}
+
+.glow-text-strong {
+  text-shadow:
+    0 0 5px currentColor,
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
+/* 閃爍動畫 */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.98; }
+  52% { opacity: 0.95; }
+  54% { opacity: 0.99; }
+}
+
+.crt-flicker {
+  animation: flicker 0.1s infinite;
+}
+
+/* 開機效果 */
+@keyframes boot-up {
+  0% {
+    filter: brightness(0);
+    transform: scale(1, 0.01);
+  }
+  50% {
+    filter: brightness(0.5);
+    transform: scale(1, 0.01);
+  }
+  70% {
+    filter: brightness(1);
+    transform: scale(1, 1);
+  }
+  100% {
+    filter: brightness(1);
+    transform: scale(1, 1);
+  }
+}
+
+.crt-boot {
+  animation: boot-up 1s ease-out forwards;
+}
+
+/* 打字機效果 */
+@keyframes typing-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typing-cursor::after {
+  content: '_';
+  animation: typing-cursor 0.8s infinite;
+}
+
+/* 像素化邊框 */
+.pixel-border {
+  border: 4px solid;
+  border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Crect x='0' y='0' width='4' height='4' fill='%23333'/%3E%3Crect x='4' y='0' width='4' height='4' fill='%23666'/%3E%3Crect x='8' y='0' width='4' height='4' fill='%23333'/%3E%3Crect x='0' y='4' width='4' height='4' fill='%23666'/%3E%3Crect x='8' y='4' width='4' height='4' fill='%23666'/%3E%3Crect x='0' y='8' width='4' height='4' fill='%23333'/%3E%3Crect x='4' y='8' width='4' height='4' fill='%23666'/%3E%3Crect x='8' y='8' width='4' height='4' fill='%23333'/%3E%3C/svg%3E") 4 stretch;
+}
+
+/* 進度條效果 */
+.progress-bar {
+  background: #1a1a1a;
+  border: 2px solid #333;
+  height: 20px;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(to right, transparent, currentColor);
+  animation: progress-glow 1s infinite;
+}
+
+@keyframes progress-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 房間主題色變數 */
+:root {
+  --color-origin: #14fdce;
+  --color-quest: #ff6b6b;
+  --color-treasure: #ffd93d;
+  --color-skill: #6bcfff;
+  --color-achievement: #c77dff;
+  --color-contact: #ffb000;
+  --color-bg: #0a0a0a;
+  --color-text: #e0e0e0;
+  --color-text-dim: #666666;
+  --color-border: #333333;
+}
+
+/* 房間主題類別 */
+.theme-origin { --room-color: var(--color-origin); }
+.theme-quest { --room-color: var(--color-quest); }
+.theme-treasure { --room-color: var(--color-treasure); }
+.theme-skill { --room-color: var(--color-skill); }
+.theme-achievement { --room-color: var(--color-achievement); }
+.theme-contact { --room-color: var(--color-contact); }
+
+/* 路徑發光效果 */
+.path-unexplored {
+  stroke: #222;
+  stroke-width: 3;
+  opacity: 0.5;
+}
+
+.path-explored {
+  stroke: var(--color-origin);
+  stroke-width: 4;
+  filter: drop-shadow(0 0 5px var(--color-origin));
+  animation: path-glow 2s infinite;
+}
+
+@keyframes path-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px var(--color-origin));
+    opacity: 0.8;
+  }
+  50% {
+    filter: drop-shadow(0 0 10px var(--color-origin));
+    opacity: 1;
+  }
+}
+
+/* 房間節點效果 */
+.room-node {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.room-node:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
+
+.room-node.visited {
+  filter: drop-shadow(0 0 10px var(--room-color));
+}
+
+.room-node.current {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px var(--room-color));
+  }
+  50% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px var(--room-color));
+  }
+}
+
+/* 移動中的光點效果 */
+@keyframes path-particle {
+  0% { offset-distance: 0%; opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+.path-particle {
+  width: 8px;
+  height: 8px;
+  background: var(--color-origin);
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: path-particle 1s ease-out forwards;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+  .crt-scanlines::before {
+    background-size: 100% 2px;
+  }
+
+  .crt-screen {
+    border-radius: 10px;
+  }
+}
