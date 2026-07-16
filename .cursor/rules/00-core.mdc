@@ -1,0 +1,76 @@
+---
+description: Maze Portfolio 核心規範：專案概述、開發指令、全域語言/風格/安全規則
+alwaysApply: true
+---
+
+# Maze Portfolio（核心規範）
+
+> 本專案已有專屬 `CLAUDE.md`（scopes、開發指令、文件觸發詞），以及決策記錄 `prepare.md`。
+> 本 repo 為獨立 git repo，Cursor 單開時讀不到父層規則，故此處內嵌全域核心。
+> 規則有出入時一律以根目錄 `CLAUDE.md` 為準；修改全域規則請先改根目錄再同步回此處。
+> 本專案專屬規則（scopes 等）請直接讀同層 `CLAUDE.md`，此處不重複。
+
+## 專案概述
+
+迷宮主題的作品集 / 履歷預覽應用
+- **技術棧**：Vue 3 + TypeScript + Vite
+- **類型**：單頁作品集應用
+
+```
+maze-portfolio/
+├── index.html         # 主要 HTML 入口
+├── src/
+│   ├── components/    # Vue 組件
+│   └── *.vue          # Vue 檔案
+├── public/            # 靜態資源
+├── docs/              # 文件
+└── dist/              # 建置輸出
+```
+
+## 開發指令
+
+```bash
+npm install          # 安裝依賴
+npm run dev          # 開發伺服器
+npm run build        # production 建置（含 vue-tsc 型別檢查）
+npm run preview      # 預覽建置結果
+```
+
+## Commit 前必做（在全域清單之上「新增」，不取代）
+
+- [ ] `npm run build` → 確保 TypeScript 編譯通過
+- [ ] 瀏覽器實測 → 確認功能正常
+
+---
+
+# 繼承的全域核心規則（不可在此覆蓋）
+
+## 語言
+
+所有回應使用**繁體中文**。PR 標題與說明使用**繁體中文**。
+
+## 程式碼風格
+
+- **命名**：變數/函式 `camelCase`、Class/Component `PascalCase`、常數 `UPPER_SNAKE_CASE`
+- **縮排**：2 spaces、行寬上限 100
+- **引號**：JS/TS 用 single `'`
+- **非同步**：`async/await` 優先於 `.then()`
+- **Commit 前**：Lint + Build 必須通過
+- **修改前先讀現有程式碼**，保持與既有風格一致
+
+## 安全規則（不可覆蓋）
+
+- 禁止 commit `.env`、API Keys 等機密檔案（建議用 `.env.example`）
+- 禁止自動 merge 到 `main`，merge 由用戶手動執行
+- 禁止直接 push `main`（v1.0 初始 release 除外）
+- 禁止手動修改 binary / 自動生成資料檔（`.sqlite`, `.db`, `.json` dumps）
+- 新增重型依賴（TensorFlow, PyTorch, AWS SDK, Stripe SDK）前必須詢問
+
+## Commit 前自查（靜默執行，不需提醒用戶）
+
+- [ ] 新增/修改功能？→ 更新 `README.md`、`CHANGELOG.md`
+- [ ] 新增/刪除檔案或模組？→ 更新 `docs/ARCHITECTURE.md`、README 結構
+- [ ] 修改 API？→ 更新 `docs/API.md`
+- [ ] 新增依賴？→ 更新 `package.json`、`docs/DEPENDENCIES.md`
+- [ ] 完成里程碑？→ 更新 `CHANGELOG.md`
+- [ ] 架構變動？→ 更新 `docs/ARCHITECTURE.md`

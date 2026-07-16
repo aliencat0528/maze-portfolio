@@ -1,0 +1,20 @@
+---
+description: 撰寫或修改 Vue 組件、樣式時的專案專屬風格規範
+globs: **/*.vue,**/*.ts,**/*.css,**/*.scss
+alwaysApply: false
+---
+
+# Vue / 樣式風格（專案專屬補充）
+
+```yaml
+components: PascalCase.vue
+css_classes: kebab-case
+vue:
+  composition_api: preferred
+  script_setup: preferred
+```
+
+其餘沿用全域規範（`camelCase` / 2 spaces / single quote / 行寬 100 / `async/await` 優先）。
+
+- **Commit 前必跑**：`npm run build`（TypeScript 編譯須通過）
+- **修改前先讀現有程式碼**，保持與既有組件風格一致
