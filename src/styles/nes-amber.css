@@ -1,0 +1,125 @@
+/* nes.css 琥珀化覆寫層（MR-003 + MR-005）
+ *
+ * 目的：保留 nes.css 的像素 UI「結構」（4px 硬邊框、凹角、按鈕立體陰影），
+ *      但把配色全部換成單色琥珀 —— 效果等同「一台跑著 NES 介面的琥珀 CRT 螢幕」。
+ *
+ * 必須在 nes-core.min.css 之後載入（見 main.css 的 @import 順序）。
+ */
+
+/* ---------------------------------------------------------------
+ * 1. 抵銷 nes-core 的 reboot
+ * nes-core 的 reboot 會把 body 設成白底 + 系統 sans + antialiased，
+ * 蓋掉我們在 :root 設的暖黑底與 VT323。像素字體必須關掉平滑化才銳利。
+ * --------------------------------------------------------------- */
+body {
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: none;
+}
+
+/* ---------------------------------------------------------------
+ * 2. 像素凹角的重新上色
+ * nes.css 把角落缺口畫成內嵌 SVG 的 border-image，顏色是寫死的深灰
+ * rgb(33,37,41)，無法用變數覆寫 —— 只能整個 data URI 換掉。
+ * 用 rgb() 而非 hex，避免 data URI 裡的 # 需要 %23 轉義。
+ * --------------------------------------------------------------- */
+.nes-btn,
+.nes-progress,
+.nes-input,
+.nes-textarea {
+  border-image-source: url('data:image/svg+xml;utf8,<?xml version="1.0" encoding="UTF-8" ?><svg version="1.1" width="5" height="5" xmlns="http://www.w3.org/2000/svg"><path d="M2 1 h1 v1 h-1 z M1 2 h1 v1 h-1 z M3 2 h1 v1 h-1 z M2 3 h1 v1 h-1 z" fill="rgb(255,176,0)" /></svg>');
+}
+
+/* ---------------------------------------------------------------
+ * 3. 容器
+ * --------------------------------------------------------------- */
+.nes-container {
+  color: var(--color-text);
+  background-color: transparent;
+  border-color: var(--room-color, var(--color-amber));
+}
+
+.nes-container.with-title > .title {
+  color: var(--room-color, var(--color-amber));
+  background-color: var(--color-bg);
+  text-shadow: 0 0 6px var(--room-color, var(--color-amber));
+}
+
+.nes-container.is-dark {
+  color: var(--color-text);
+  background-color: rgb(0 0 0 / 45%);
+  border-color: var(--room-color, var(--color-amber));
+}
+
+.nes-container.is-dark.with-title > .title {
+  background-color: var(--color-bg);
+}
+
+/* ---------------------------------------------------------------
+ * 4. 按鈕 —— 預設為暗底琥珀字，hover 反白成琥珀底暗字（終端機反白慣例）
+ * --------------------------------------------------------------- */
+.nes-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  color: var(--room-color, var(--color-amber));
+  background-color: rgb(0 0 0 / 40%);
+}
+
+.nes-btn::after {
+  box-shadow: inset -4px -4px var(--color-amber-deep);
+}
+
+.nes-btn:hover {
+  color: var(--color-bg);
+  background-color: var(--room-color, var(--color-amber));
+  box-shadow: 0 0 12px var(--room-color, var(--color-amber));
+}
+
+.nes-btn:hover::after {
+  box-shadow: inset -6px -6px var(--color-amber-deep);
+}
+
+.nes-btn:focus {
+  box-shadow: 0 0 0 6px rgb(255 176 0 / 30%);
+}
+
+.nes-btn:active:not(.is-disabled)::after {
+  box-shadow: inset 4px 4px var(--color-amber-deep);
+}
+
+.nes-btn.is-disabled {
+  color: var(--color-text-dim);
+  background-color: rgb(0 0 0 / 40%);
+}
+
+/* ---------------------------------------------------------------
+ * 5. 進度條 —— 探索進度用
+ * --------------------------------------------------------------- */
+.nes-progress {
+  color: var(--color-amber);
+  background-color: rgb(0 0 0 / 40%);
+}
+
+.nes-progress::-webkit-progress-bar {
+  background-color: rgb(0 0 0 / 40%);
+}
+
+.nes-progress::-webkit-progress-value {
+  background-color: var(--color-amber);
+  box-shadow: 0 0 8px var(--color-amber);
+}
+
+.nes-progress::-moz-progress-bar {
+  background-color: var(--color-amber);
+}
+
+/* ---------------------------------------------------------------
+ * 6. 文字色階 —— nes.css 的語意色全部收斂到琥珀色溫
+ * --------------------------------------------------------------- */
+.nes-text.is-primary { color: var(--color-amber); }
+.nes-text.is-success { color: var(--color-origin); }
+.nes-text.is-warning { color: var(--color-treasure); }
+.nes-text.is-error { color: var(--color-quest); }
+.nes-text.is-disabled { color: var(--color-text-dim); }
