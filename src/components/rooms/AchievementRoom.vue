@@ -23,14 +23,20 @@ const typeIcons: Record<string, string> = {
         <!-- 成就圖示 -->
         <div class="achievement-icon">
           <span v-if="achievement.unlocked">{{ typeIcons[achievement.type] }}</span>
-          <span v-else class="locked-icon">🔒</span>
+          <span
+            v-else
+            class="locked-icon"
+          >🔒</span>
         </div>
 
         <!-- 成就內容 -->
         <div class="achievement-content">
           <div class="achievement-header">
             <span class="achievement-type">[ {{ achievement.typeName }} ]</span>
-            <span v-if="achievement.year" class="achievement-year">{{ achievement.year }}</span>
+            <span
+              v-if="achievement.year"
+              class="achievement-year"
+            >{{ achievement.year }}</span>
           </div>
 
           <h3 class="achievement-name">
@@ -44,10 +50,16 @@ const typeIcons: Record<string, string> = {
 
         <!-- 解鎖狀態 -->
         <div class="achievement-status">
-          <span v-if="achievement.unlocked" class="status-unlocked">
+          <span
+            v-if="achievement.unlocked"
+            class="status-unlocked"
+          >
             ✓ 已解鎖
           </span>
-          <span v-else class="status-locked">
+          <span
+            v-else
+            class="status-locked"
+          >
             未解鎖
           </span>
         </div>
@@ -88,7 +100,7 @@ const typeIcons: Record<string, string> = {
             :style="{
               width: `${(achievements.filter(a => a.unlocked).length / achievements.length) * 100}%`
             }"
-          ></div>
+          />
         </div>
         <span class="text-accent">
           {{ achievements.filter(a => a.unlocked).length }}/{{ achievements.length }}

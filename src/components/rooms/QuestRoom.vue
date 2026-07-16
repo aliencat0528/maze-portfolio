@@ -70,13 +70,18 @@ const getDifficultyStars = (level: number) => {
           </div>
         </header>
 
-        <div class="divider"></div>
+        <div class="divider" />
 
         <!-- 任務目標 -->
         <section class="quest-section">
-          <h3 class="section-label">> 任務目標</h3>
+          <h3 class="section-label">
+            > 任務目標
+          </h3>
           <ul class="list-terminal">
-            <li v-for="(obj, i) in quest.objectives" :key="i">
+            <li
+              v-for="(obj, i) in quest.objectives"
+              :key="i"
+            >
               {{ obj }}
             </li>
           </ul>
@@ -84,9 +89,14 @@ const getDifficultyStars = (level: number) => {
 
         <!-- 獲得經驗值 -->
         <section class="quest-section">
-          <h3 class="section-label">> 獲得經驗值</h3>
+          <h3 class="section-label">
+            > 獲得經驗值
+          </h3>
           <ul class="list-terminal achievements-list">
-            <li v-for="(achievement, i) in quest.achievements" :key="i">
+            <li
+              v-for="(achievement, i) in quest.achievements"
+              :key="i"
+            >
               <span class="xp-badge">+EXP</span>
               {{ achievement }}
             </li>
@@ -95,7 +105,9 @@ const getDifficultyStars = (level: number) => {
 
         <!-- 解鎖技能 -->
         <section class="quest-section">
-          <h3 class="section-label">> 解鎖技能</h3>
+          <h3 class="section-label">
+            > 解鎖技能
+          </h3>
           <div class="skills-unlocked">
             <span
               v-for="skill in quest.skills"

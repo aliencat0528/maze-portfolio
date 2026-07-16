@@ -31,23 +31,41 @@ const getContactHref = (contact: typeof contacts[0]) => {
     <!-- 歡迎訊息 -->
     <section class="welcome-section terminal-box">
       <div class="terminal-header">
-        <span class="terminal-dot red"></span>
-        <span class="terminal-dot yellow"></span>
-        <span class="terminal-dot green"></span>
+        <span class="terminal-dot red" />
+        <span class="terminal-dot yellow" />
+        <span class="terminal-dot green" />
         <span class="terminal-title">connection.exe</span>
       </div>
 
       <div class="terminal-body">
-        <p class="terminal-line">> 歡迎來到終點塔</p>
-        <p class="terminal-line">> 你已成功探索迷宮</p>
-        <p class="terminal-line">> 建立連線以開啟新的冒險...</p>
-        <p class="terminal-line typing-cursor" v-if="messageStatus === 'idle'">
+        <p class="terminal-line">
+          > 歡迎來到終點塔
+        </p>
+        <p class="terminal-line">
+          > 你已成功探索迷宮
+        </p>
+        <p class="terminal-line">
+          > 建立連線以開啟新的冒險...
+        </p>
+        <p
+          v-if="messageStatus === 'idle'"
+          class="terminal-line typing-cursor"
+        >
           > 選擇通訊頻道_
         </p>
-        <p class="terminal-line" v-else-if="messageStatus === 'typing'">
-          {{ displayText }}<span v-if="isTyping" class="cursor">_</span>
+        <p
+          v-else-if="messageStatus === 'typing'"
+          class="terminal-line"
+        >
+          {{ displayText }}<span
+            v-if="isTyping"
+            class="cursor"
+          >_</span>
         </p>
-        <p class="terminal-line success" v-else>
+        <p
+          v-else
+          class="terminal-line success"
+        >
           > 頻道開啟！請選擇聯絡方式
         </p>
       </div>
@@ -55,7 +73,9 @@ const getContactHref = (contact: typeof contacts[0]) => {
 
     <!-- 聯絡方式 -->
     <section class="contact-section">
-      <h2 class="section-title">> 通訊頻道</h2>
+      <h2 class="section-title">
+        > 通訊頻道
+      </h2>
 
       <div class="contact-grid">
         <a

@@ -74,15 +74,25 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app" :class="{ 'is-mobile': isMobile }">
+  <div
+    class="app"
+    :class="{ 'is-mobile': isMobile }"
+  >
     <!-- 開機畫面 -->
     <Transition name="fade">
-      <div v-if="isBooting" class="boot-screen crt-screen crt-scanlines">
+      <div
+        v-if="isBooting"
+        class="boot-screen crt-screen crt-scanlines"
+      >
         <div class="boot-content">
-          <h1 class="boot-title font-pixel">MAZE PORTFOLIO</h1>
-          <p class="boot-text typing-cursor">{{ displayText }}</p>
+          <h1 class="boot-title font-pixel">
+            MAZE PORTFOLIO
+          </h1>
+          <p class="boot-text typing-cursor">
+            {{ displayText }}
+          </p>
           <div class="boot-progress">
-            <div class="boot-progress-bar"></div>
+            <div class="boot-progress-bar" />
           </div>
         </div>
       </div>
@@ -90,17 +100,29 @@ onUnmounted(() => {
 
     <!-- 主要內容 -->
     <Transition name="fade">
-      <div v-if="showMaze" class="main-container crt-screen crt-scanlines crt-boot">
+      <div
+        v-if="showMaze"
+        class="main-container crt-screen crt-scanlines crt-boot"
+      >
         <!-- 迷宮視圖（入口） -->
-        <Transition name="slide" mode="out-in">
-          <div v-if="currentRoom === 'entrance'" key="maze" class="maze-view">
+        <Transition
+          name="slide"
+          mode="out-in"
+        >
+          <div
+            v-if="currentRoom === 'entrance'"
+            key="maze"
+            class="maze-view"
+          >
             <!-- 頂部標題 -->
             <header class="maze-header">
               <h1 class="maze-title font-pixel">
                 <span class="title-icon">🏰</span>
                 {{ resumeData.basic.name }} 的迷宮
               </h1>
-              <p class="maze-subtitle text-dim">{{ resumeData.basic.tagline }}</p>
+              <p class="maze-subtitle text-dim">
+                {{ resumeData.basic.tagline }}
+              </p>
             </header>
 
             <!-- 迷宮地圖 -->
@@ -127,8 +149,13 @@ onUnmounted(() => {
 
         <!-- 過場遮罩 -->
         <Transition name="fade">
-          <div v-if="isTransitioning" class="transition-overlay">
-            <div class="transition-text">Loading...</div>
+          <div
+            v-if="isTransitioning"
+            class="transition-overlay"
+          >
+            <div class="transition-text">
+              Loading...
+            </div>
           </div>
         </Transition>
       </div>

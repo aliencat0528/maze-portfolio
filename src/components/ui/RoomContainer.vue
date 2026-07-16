@@ -28,38 +28,54 @@ const handleExit = () => {
 </script>
 
 <template>
-  <div class="room-container crt-screen crt-scanlines" :class="themeClass">
+  <div
+    class="room-container crt-screen crt-scanlines"
+    :class="themeClass"
+  >
     <div class="room-content">
       <!-- 頂部導航 -->
       <header class="room-header">
         <div class="room-title">
           <span class="room-icon">{{ room.icon }}</span>
-          <h1 class="title-main">{{ room.englishName }}</h1>
+          <h1 class="title-main">
+            {{ room.englishName }}
+          </h1>
         </div>
-        <button class="btn-terminal btn-exit" @click="handleExit">
+        <button
+          class="btn-terminal btn-exit"
+          @click="handleExit"
+        >
           [ESC] 返回迷宮
         </button>
       </header>
 
       <!-- 載入動畫 -->
-      <div v-if="!isLoaded" class="loading-screen">
-        <p class="loading-text typing-cursor">{{ displayText }}</p>
+      <div
+        v-if="!isLoaded"
+        class="loading-screen"
+      >
+        <p class="loading-text typing-cursor">
+          {{ displayText }}
+        </p>
         <div class="loading-bar">
-          <div class="loading-bar-fill"></div>
+          <div class="loading-bar-fill" />
         </div>
       </div>
 
       <!-- 房間內容 -->
-      <main v-else class="room-main fade-in">
+      <main
+        v-else
+        class="room-main fade-in"
+      >
         <div class="room-subtitle">
           <span class="text-dim">> </span>
           <span class="text-accent">{{ room.name }}</span>
         </div>
 
-        <div class="divider"></div>
+        <div class="divider" />
 
         <!-- 插槽內容 -->
-        <slot></slot>
+        <slot />
       </main>
 
       <!-- 底部狀態 -->

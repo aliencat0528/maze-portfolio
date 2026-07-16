@@ -83,7 +83,10 @@ const entrancePosition = computed(() => roomPositions.value.entrance)
 </script>
 
 <template>
-  <div class="maze-map" :class="{ 'maze-map--mobile': isMobile }">
+  <div
+    class="maze-map"
+    :class="{ 'maze-map--mobile': isMobile }"
+  >
     <svg
       viewBox="0 0 400 400"
       class="maze-svg"
@@ -91,7 +94,12 @@ const entrancePosition = computed(() => roomPositions.value.entrance)
     >
       <!-- 背景網格 -->
       <defs>
-        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <pattern
+          id="grid"
+          width="20"
+          height="20"
+          patternUnits="userSpaceOnUse"
+        >
           <path
             d="M 20 0 L 0 0 0 20"
             fill="none"
@@ -100,7 +108,11 @@ const entrancePosition = computed(() => roomPositions.value.entrance)
           />
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
+      <rect
+        width="100%"
+        height="100%"
+        fill="url(#grid)"
+      />
 
       <!-- 路徑連線 -->
       <g class="paths">
