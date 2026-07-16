@@ -82,7 +82,7 @@ const handleExit = () => {
       <footer class="room-footer">
         <span class="text-dim">位置: {{ room.name }}</span>
         <span class="text-dim">|</span>
-        <span :style="{ color: room.color }">
+        <span class="room-signature">
           ████ {{ room.id.toUpperCase() }} ████
         </span>
       </footer>
@@ -91,6 +91,11 @@ const handleExit = () => {
 </template>
 
 <style scoped>
+/* 主題色一律走 .theme-{id} 設定的 --room-color，資料層不再各存一份 hex */
+.room-signature {
+  color: var(--room-color);
+}
+
 .room-container {
   width: 100%;
   height: 100%;

@@ -1,30 +1,47 @@
 // 房間類型定義
 export type RoomType = 'origin' | 'quest' | 'treasure' | 'skill' | 'achievement' | 'contact'
 
-// 房間配置
+// 迷宮節點識別：入口不是房間，但同樣佔一個格子
+export type NodeId = RoomType | 'entrance'
+
+// 格子座標（非像素座標）
+export interface Point {
+  x: number
+  y: number
+}
+
+// 房間配置。position 為邏輯格子座標，由 useMaze 展開為實際格子；
+// connections 是迷宮拓撲的唯一真相（MR-002）。
+//
+// 刻意不含 color：主題色由 crt.css 的 --color-{id} 變數經 .theme-{id} 套用，
+// 資料層再放一份 hex 會變成第二份真相（與 position 同類的問題）。
 export interface RoomConfig {
   id: RoomType
   name: string
   englishName: string
   icon: string
-  color: string
-  position: { x: number; y: number }
+  position: Point
   connections: RoomType[]
 }
 
-// 迷宮路徑
-export interface MazePath {
-  from: RoomType
-  to: RoomType
-  explored: boolean
+// 入口配置：入口只連接起源之廳，不再直連全部房間
+export interface EntranceConfig {
+  position: Point
+  connections: RoomType[]
 }
 
-// 角色位置
-export interface PlayerPosition {
-  x: number
-  y: number
-  currentRoom: RoomType | 'entrance'
+// 格子種類：房間方塊，或連接房間的走廊
+export type CellKind = 'room' | 'corridor'
+
+// 迷宮中的一個可走格子
+export interface MazeCell {
+  point: Point
+  kind: CellKind
+  nodeId?: NodeId
 }
+
+// 迷霧層級：已訪問全亮 / 鄰接暗輪廓 / 其餘全黑（MR-002）
+export type FogLevel = 'visible' | 'dim' | 'hidden'
 
 // 基本資料
 export interface BasicInfo {
@@ -108,14 +125,6 @@ export interface ResumeData {
   skills: SkillData[]
   achievements: AchievementData[]
   contacts: ContactData[]
-}
-
-// 探索狀態
-export interface ExplorationState {
-  visitedRooms: RoomType[]
-  exploredPaths: MazePath[]
-  currentRoom: RoomType | 'entrance'
-  totalRooms: number
 }
 
 // 裝置類型

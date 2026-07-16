@@ -3,83 +3,82 @@ import { computed } from 'vue'
 import { roomConfigs } from '@/data/resumeData'
 import { useExploration } from '@/composables/useExploration'
 import { useDevice } from '@/composables/useDevice'
-import type { RoomType } from '@/types'
+import { cellKey, walkableNeighbors } from '@/composables/useMaze'
+import type { MazeCell, NodeId, Point } from '@/types'
 
-const emit = defineEmits<{
-  (e: 'select-room', roomId: RoomType): void
-}>()
+const {
+  maze,
+  playerCell,
+  isMoving,
+  showOverview,
+  standingOn,
+  explorationProgress,
+  nodeFog,
+  cellFog,
+  goToNode,
+  toggleOverview
+} = useExploration()
 
-const { isRoomVisited, isPathExplored, currentRoom } = useExploration()
 const { isMobile } = useDevice()
 
-// 計算房間在 SVG 中的位置
-const roomPositions = computed(() => {
-  const positions: Record<string, { x: number; y: number }> = {
-    entrance: { x: 200, y: 250 },
-    origin: { x: 120, y: 80 },
-    quest: { x: 200, y: 80 },
-    treasure: { x: 280, y: 80 },
-    skill: { x: 80, y: 170 },
-    achievement: { x: 200, y: 170 },
-    contact: { x: 200, y: 320 }
-  }
-  return positions
+/** 一格的邊長（SVG 單位），走廊格與房間格同寬 */
+const CELL = 48
+const PADDING = 20
+
+const viewBox = computed(
+  () => `0 0 ${maze.width * CELL + PADDING * 2} ${maze.height * CELL + PADDING * 2}`
+)
+
+/** 格子座標 → 該格中心的 SVG 座標 */
+const centerOf = (point: Point) => ({
+  x: PADDING + point.x * CELL + CELL / 2,
+  y: PADDING + point.y * CELL + CELL / 2
 })
 
-// 生成路徑連線
-const pathConnections = computed(() => {
-  const connections: { from: string; to: string; explored: boolean }[] = []
-  const added = new Set<string>()
+const corridors = computed(() =>
+  [...maze.cells.values()].filter(cell => cell.kind === 'corridor')
+)
 
-  // 入口到各房間的連線
-  roomConfigs.forEach(room => {
-    const key = `entrance-${room.id}`
-    if (!added.has(key)) {
-      connections.push({
-        from: 'entrance',
-        to: room.id,
-        explored: isPathExplored('entrance', room.id)
-      })
-      added.add(key)
+/**
+ * 走廊臂：從格子中心往每個可走的鄰居方向畫半格。
+ * 相鄰兩格各畫自己的一半，接起來剛好是完整通道 —— 直線、轉角、T 字、
+ * 十字路口都由這一條規則涵蓋，不需要判斷走廊形狀。
+ */
+const armsOf = (cell: MazeCell) => {
+  const center = centerOf(cell.point)
+  return walkableNeighbors(cell.point, maze.cells).map(neighbor => {
+    const target = centerOf(neighbor)
+    return {
+      key: `${cellKey(cell.point)}->${cellKey(neighbor)}`,
+      x1: center.x,
+      y1: center.y,
+      x2: (center.x + target.x) / 2,
+      y2: (center.y + target.y) / 2
     }
   })
-
-  // 房間之間的連線
-  roomConfigs.forEach(room => {
-    room.connections.forEach(connectedId => {
-      const key = [room.id, connectedId].sort().join('-')
-      if (!added.has(key)) {
-        connections.push({
-          from: room.id,
-          to: connectedId,
-          explored: isPathExplored(room.id, connectedId)
-        })
-        added.add(key)
-      }
-    })
-  })
-
-  return connections
-})
-
-// 取得路徑的 SVG path
-const getPathD = (from: string, to: string) => {
-  const fromPos = roomPositions.value[from]
-  const toPos = roomPositions.value[to]
-
-  if (!fromPos || !toPos) return ''
-
-  // 簡單直線連接
-  return `M ${fromPos.x} ${fromPos.y} L ${toPos.x} ${toPos.y}`
 }
 
-// 點擊房間
-const handleRoomClick = (roomId: RoomType) => {
-  emit('select-room', roomId)
-}
+const roomNodes = computed(() =>
+  roomConfigs.map(room => ({
+    ...room,
+    center: centerOf(maze.nodeCell.get(room.id) as Point),
+    fog: nodeFog(room.id)
+  }))
+)
 
-// 入口位置
-const entrancePosition = computed(() => roomPositions.value.entrance)
+const entranceNode = computed(() => ({
+  center: centerOf(maze.nodeCell.get('entrance') as Point),
+  fog: nodeFog('entrance')
+}))
+
+const playerPos = computed(() => centerOf(playerCell.value))
+
+/** 站在房間上但尚未進入時，提示可以按 Enter */
+const canEnterHere = computed(() => Boolean(standingOn.value && standingOn.value !== 'entrance'))
+
+const handleNodeClick = (nodeId: NodeId) => {
+  goToNode(nodeId)
+}
 </script>
 
 <template>
@@ -88,215 +87,316 @@ const entrancePosition = computed(() => roomPositions.value.entrance)
     :class="{ 'maze-map--mobile': isMobile }"
   >
     <svg
-      viewBox="0 0 400 400"
+      :viewBox="viewBox"
       class="maze-svg"
       preserveAspectRatio="xMidYMid meet"
     >
-      <!-- 背景網格 -->
-      <defs>
-        <pattern
-          id="grid"
-          width="20"
-          height="20"
-          patternUnits="userSpaceOnUse"
+      <!-- 走廊 -->
+      <g class="corridors">
+        <template
+          v-for="cell in corridors"
+          :key="cellKey(cell.point)"
         >
-          <path
-            d="M 20 0 L 0 0 0 20"
-            fill="none"
-            stroke="#1a1a1a"
-            stroke-width="0.5"
+          <line
+            v-for="arm in armsOf(cell)"
+            :key="arm.key"
+            :x1="arm.x1"
+            :y1="arm.y1"
+            :x2="arm.x2"
+            :y2="arm.y2"
+            :class="['corridor', `fog-${cellFog(cell)}`]"
           />
-        </pattern>
-      </defs>
-      <rect
-        width="100%"
-        height="100%"
-        fill="url(#grid)"
-      />
-
-      <!-- 路徑連線 -->
-      <g class="paths">
-        <path
-          v-for="conn in pathConnections"
-          :key="`${conn.from}-${conn.to}`"
-          :d="getPathD(conn.from, conn.to)"
-          :class="[
-            'maze-path',
-            conn.explored ? 'path-explored' : 'path-unexplored'
-          ]"
-          fill="none"
-        />
+        </template>
       </g>
 
-      <!-- 入口節點 -->
+      <!-- 入口 -->
       <g
+        v-if="entranceNode.fog !== 'hidden'"
         class="entrance-node"
-        :transform="`translate(${entrancePosition?.x ?? 200}, ${entrancePosition?.y ?? 250})`"
+        :transform="`translate(${entranceNode.center.x}, ${entranceNode.center.y})`"
       >
-        <circle
-          r="15"
-          fill="#0a0a0a"
-          stroke="#14fdce"
-          stroke-width="2"
-          :class="{ current: currentRoom === 'entrance' }"
+        <rect
+          class="entrance-box"
+          x="-16"
+          y="-16"
+          width="32"
+          height="32"
         />
         <text
-          y="35"
+          class="entrance-label"
+          y="3"
           text-anchor="middle"
-          fill="#14fdce"
-          font-size="12"
-          class="font-terminal"
         >
           START
         </text>
       </g>
 
-      <!-- 房間節點 -->
+      <!-- 房間 -->
       <g
-        v-for="room in roomConfigs"
+        v-for="room in roomNodes"
+        v-show="room.fog !== 'hidden'"
         :key="room.id"
         class="room-node"
-        :class="[
-          `theme-${room.id}`,
-          { visited: isRoomVisited(room.id) },
-          { current: currentRoom === room.id }
-        ]"
-        :transform="`translate(${roomPositions[room.id]?.x || 0}, ${roomPositions[room.id]?.y || 0})`"
-        @click="handleRoomClick(room.id)"
+        :class="[`theme-${room.id}`, `fog-${room.fog}`, { current: standingOn === room.id }]"
+        :transform="`translate(${room.center.x}, ${room.center.y})`"
+        @click="handleNodeClick(room.id)"
       >
-        <!-- 房間外框 -->
         <rect
-          x="-30"
-          y="-25"
-          width="60"
-          height="50"
-          rx="4"
-          fill="#0a0a0a"
-          :stroke="room.color"
-          stroke-width="2"
-          class="room-bg"
+          class="room-box"
+          x="-21"
+          y="-21"
+          width="42"
+          height="42"
+          rx="2"
         />
-        <!-- 房間圖示 -->
+
+        <!-- 已探明的房間才露出圖示與名稱；只是「鄰接可見」的房間僅有輪廓與問號 -->
+        <template v-if="room.fog === 'visible'">
+          <text
+            class="room-icon"
+            y="-2"
+            text-anchor="middle"
+          >
+            {{ room.icon }}
+          </text>
+          <text
+            class="room-name"
+            y="15"
+            text-anchor="middle"
+          >
+            {{ room.name }}
+          </text>
+        </template>
         <text
-          y="-5"
+          v-else
+          class="room-unknown"
+          y="5"
           text-anchor="middle"
-          font-size="20"
         >
-          {{ room.icon }}
+          ?
         </text>
-        <!-- 房間名稱 -->
-        <text
-          y="18"
-          text-anchor="middle"
-          :fill="room.color"
-          font-size="10"
-          class="font-terminal"
-        >
-          {{ room.name }}
-        </text>
+      </g>
+
+      <!-- 角色 -->
+      <g
+        class="player"
+        :class="{ moving: isMoving }"
+        :transform="`translate(${playerPos.x}, ${playerPos.y})`"
+      >
+        <circle
+          class="player-dot"
+          r="6"
+        />
       </g>
     </svg>
 
     <!-- 探索進度 -->
-    <div class="exploration-status">
-      <span class="status-label">> 探索進度:</span>
-      <span class="status-value">
-        {{ useExploration().explorationProgress.value.visited }}/{{ useExploration().explorationProgress.value.total }}
-      </span>
+    <div class="maze-hud">
+      <div class="hud-progress">
+        <span class="hud-label">探索進度</span>
+        <progress
+          class="nes-progress"
+          :value="explorationProgress.visited"
+          :max="explorationProgress.total"
+        />
+        <span class="hud-value">
+          {{ explorationProgress.visited }}/{{ explorationProgress.total }}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        class="nes-btn"
+        @click="toggleOverview"
+      >
+        {{ showOverview ? '返回探索' : '總覽' }}
+      </button>
     </div>
 
     <!-- 操作提示 -->
-    <div class="maze-hint">
-      <template v-if="isMobile">
-        點擊房間進入探索
+    <p class="maze-hint">
+      <template v-if="showOverview">
+        總覽模式：全圖已揭開，可直接點選任一房間
+      </template>
+      <template v-else-if="canEnterHere">
+        按 Enter 進入房間
+      </template>
+      <template v-else-if="isMobile">
+        點選房間，角色會自動走過去
       </template>
       <template v-else>
-        點擊房間進入 | 方向鍵移動
+        方向鍵移動 ｜ 點選房間自動尋路 ｜ Enter 進入
       </template>
-    </div>
+    </p>
   </div>
 </template>
 
 <style scoped>
 .maze-map {
-  width: 100%;
-  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
 }
 
 .maze-svg {
   width: 100%;
-  max-width: 500px;
+  max-width: 560px;
   height: auto;
-  max-height: 60vh;
+  max-height: 58vh;
 }
 
-.maze-path {
-  transition: all 0.5s ease;
+/* --- 迷霧 --------------------------------------------------------- */
+.fog-visible {
+  opacity: 1;
 }
 
+.fog-dim {
+  opacity: 0.28;
+}
+
+/* --- 走廊 --------------------------------------------------------- */
+.corridor {
+  stroke: var(--color-amber);
+  stroke-width: 11;
+  stroke-linecap: butt;
+  transition: opacity 0.4s ease;
+}
+
+.corridor.fog-visible {
+  filter: drop-shadow(0 0 4px var(--color-amber));
+}
+
+/* --- 入口 --------------------------------------------------------- */
+.entrance-box {
+  fill: var(--color-bg);
+  stroke: var(--color-amber);
+  stroke-width: 2;
+}
+
+.entrance-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 6px;
+  fill: var(--color-amber);
+}
+
+/* --- 房間 --------------------------------------------------------- */
 .room-node {
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: opacity 0.4s ease;
 }
 
-.room-node:hover .room-bg {
-  filter: brightness(1.3);
+.room-box {
+  fill: var(--color-bg);
+  stroke: var(--room-color);
+  stroke-width: 2;
+}
+
+.room-node.fog-visible .room-box {
+  filter: drop-shadow(0 0 6px var(--room-color));
+}
+
+.room-node:hover .room-box {
   stroke-width: 3;
+  filter: drop-shadow(0 0 12px var(--room-color));
 }
 
-.room-node.visited .room-bg {
-  filter: drop-shadow(0 0 8px var(--room-color));
-}
-
-.room-node.current .room-bg {
+.room-node.current .room-box {
   animation: room-pulse 1.5s infinite;
 }
 
+.room-icon {
+  font-size: 17px;
+}
+
+.room-name {
+  font-family: 'VT323', monospace;
+  font-size: 9px;
+  fill: var(--room-color);
+}
+
+.room-unknown {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  fill: var(--room-color);
+}
+
 @keyframes room-pulse {
-  0%, 100% {
+  0%,
+  100% {
     filter: drop-shadow(0 0 5px var(--room-color));
   }
+
   50% {
-    filter: drop-shadow(0 0 15px var(--room-color));
+    filter: drop-shadow(0 0 16px var(--room-color));
   }
 }
 
-.entrance-node circle {
-  transition: all 0.3s ease;
+/* --- 角色 --------------------------------------------------------- */
+.player {
+  transition: transform 0.09s linear;
 }
 
-.entrance-node circle.current {
-  animation: entrance-pulse 1.5s infinite;
+.player-dot {
+  fill: var(--color-amber-bright);
+  stroke: var(--color-bg);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px var(--color-amber-bright));
+  animation: player-blink 1.2s infinite;
 }
 
-@keyframes entrance-pulse {
-  0%, 100% {
-    filter: drop-shadow(0 0 5px #14fdce);
+.player.moving .player-dot {
+  animation: none;
+}
+
+@keyframes player-blink {
+  0%,
+  100% {
+    opacity: 1;
   }
+
   50% {
-    filter: drop-shadow(0 0 15px #14fdce);
+    opacity: 0.55;
   }
 }
 
-.exploration-status {
-  margin-top: 20px;
+/* --- HUD ---------------------------------------------------------- */
+.maze-hud {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.hud-progress {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.hud-label,
+.hud-value {
   font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-  color: var(--color-text);
+  font-size: 1.1rem;
+  white-space: nowrap;
 }
 
-.status-label {
+.hud-label {
   color: var(--color-text-dim);
 }
 
-.status-value {
-  color: var(--color-origin);
-  text-shadow: 0 0 5px var(--color-origin);
+.hud-value {
+  color: var(--color-amber);
+  text-shadow: 0 0 5px var(--color-amber);
+}
+
+.hud-progress .nes-progress {
+  width: 160px;
+  height: 26px;
+  margin: 0;
 }
 
 .maze-hint {
@@ -304,14 +404,20 @@ const entrancePosition = computed(() => roomPositions.value.entrance)
   font-family: 'VT323', monospace;
   font-size: 1rem;
   color: var(--color-text-dim);
+  text-align: center;
 }
 
-/* 手機版調整 */
+/* --- 手機 --------------------------------------------------------- */
 .maze-map--mobile .maze-svg {
-  max-height: 50vh;
+  max-height: 48vh;
 }
 
-.maze-map--mobile .room-node text {
-  font-size: 8px;
+.maze-map--mobile .maze-hud {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.maze-map--mobile .hud-progress .nes-progress {
+  width: 120px;
 }
 </style>

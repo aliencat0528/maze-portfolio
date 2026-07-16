@@ -1,13 +1,20 @@
-import type { ResumeData, RoomConfig } from '@/types'
+import type { EntranceConfig, ResumeData, RoomConfig } from '@/types'
 
-// 房間配置
+// 迷宮入口。
+// 刻意只連接起源之廳：先前 MazeMap 把入口硬連到全部 6 個房間，繞過了 connections，
+// 迷宮因此退化成一張畫成地圖的選單。入口單一出口才有「從頭走起」的敘事（MR-002）。
+export const entranceConfig: EntranceConfig = {
+  position: { x: 0, y: 0 },
+  connections: ['origin']
+}
+
+// 房間配置。position 為邏輯座標，connections 決定走廊 —— 兩者是迷宮的唯一真相。
 export const roomConfigs: RoomConfig[] = [
   {
     id: 'origin',
     name: '起源之廳',
     englishName: 'HALL OF ORIGIN',
     icon: '📜',
-    color: '#14fdce',
     position: { x: 1, y: 0 },
     connections: ['skill', 'quest']
   },
@@ -16,7 +23,6 @@ export const roomConfigs: RoomConfig[] = [
     name: '試煉之路',
     englishName: 'PATH OF TRIALS',
     icon: '⚔️',
-    color: '#ff6b6b',
     position: { x: 2, y: 0 },
     connections: ['origin', 'treasure', 'achievement']
   },
@@ -25,7 +31,6 @@ export const roomConfigs: RoomConfig[] = [
     name: '寶藏室',
     englishName: 'TREASURE VAULT',
     icon: '💎',
-    color: '#ffd93d',
     position: { x: 3, y: 0 },
     connections: ['quest', 'achievement']
   },
@@ -34,7 +39,6 @@ export const roomConfigs: RoomConfig[] = [
     name: '技能樹',
     englishName: 'SKILL TREE',
     icon: '🛠️',
-    color: '#6bcfff',
     position: { x: 0, y: 1 },
     connections: ['origin', 'achievement']
   },
@@ -43,7 +47,6 @@ export const roomConfigs: RoomConfig[] = [
     name: '成就牆',
     englishName: 'WALL OF GLORY',
     icon: '🏆',
-    color: '#c77dff',
     position: { x: 2, y: 1 },
     connections: ['quest', 'treasure', 'skill', 'contact']
   },
@@ -52,7 +55,6 @@ export const roomConfigs: RoomConfig[] = [
     name: '終點塔',
     englishName: 'TOWER OF CONNECTION',
     icon: '📬',
-    color: '#ffb000',
     position: { x: 2, y: 2 },
     connections: ['achievement']
   }

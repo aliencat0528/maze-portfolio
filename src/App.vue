@@ -14,17 +14,17 @@ import { useTypewriter } from '@/composables/useTypewriter'
 import { roomConfigs, resumeData } from '@/data/resumeData'
 import type { RoomType } from '@/types'
 
-const { currentRoom, enterRoom, exitRoom, isTransitioning } = useExploration()
+const { openRoom, step, enterCurrentRoom, exitRoom } = useExploration()
 const { isMobile } = useDevice()
 const { displayText, typeText } = useTypewriter()
 
 const isBooting = ref(true)
 const showMaze = ref(false)
 
-// 當前房間配置
+// 當前開啟的房間配置；未開啟任何房間時為 null（顯示迷宮）
 const currentRoomConfig = computed(() => {
-  if (currentRoom.value === 'entrance') return null
-  return roomConfigs.find(r => r.id === currentRoom.value)
+  if (!openRoom.value) return null
+  return roomConfigs.find(r => r.id === openRoom.value)
 })
 
 // 房間組件映射
@@ -37,21 +37,40 @@ const roomComponents: Record<RoomType, typeof OriginRoom> = {
   contact: ContactRoom
 }
 
-// 處理選擇房間
-const handleSelectRoom = (roomId: RoomType) => {
-  enterRoom(roomId)
-}
-
 // 處理返回迷宮
 const handleExitRoom = () => {
   exitRoom()
 }
 
-// 鍵盤控制
+// 方向鍵 → 格子位移。維持單一全域監聽器，不讓 MazeMap 各自掛鍵盤事件。
+const MOVE_KEYS: Record<string, [number, number]> = {
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  w: [0, -1],
+  s: [0, 1],
+  a: [-1, 0],
+  d: [1, 0]
+}
+
 const handleKeydown = (e: KeyboardEvent) => {
-  if (currentRoom.value !== 'entrance' && e.key === 'Escape') {
-    handleExitRoom()
+  if (isBooting.value) return
+
+  if (openRoom.value) {
+    if (e.key === 'Escape') handleExitRoom()
+    return
   }
+
+  const move = MOVE_KEYS[e.key]
+  if (move) {
+    // 方向鍵預設會捲動頁面，迷宮視圖下要擋掉
+    e.preventDefault()
+    step(move[0], move[1])
+    return
+  }
+
+  if (e.key === 'Enter') enterCurrentRoom()
 }
 
 // 開機動畫
@@ -110,7 +129,7 @@ onUnmounted(() => {
           mode="out-in"
         >
           <div
-            v-if="currentRoom === 'entrance'"
+            v-if="!openRoom"
             key="maze"
             class="maze-view"
           >
@@ -125,8 +144,8 @@ onUnmounted(() => {
               </p>
             </header>
 
-            <!-- 迷宮地圖 -->
-            <MazeMap @select-room="handleSelectRoom" />
+            <!-- 迷宮地圖。導航由 useExploration 直接處理，不再經 App 中轉 -->
+            <MazeMap />
 
             <!-- 底部提示 -->
             <footer class="maze-footer">
@@ -143,20 +162,8 @@ onUnmounted(() => {
             :room="currentRoomConfig"
             @exit="handleExitRoom"
           >
-            <component :is="roomComponents[currentRoom as RoomType]" />
+            <component :is="roomComponents[openRoom as RoomType]" />
           </RoomContainer>
-        </Transition>
-
-        <!-- 過場遮罩 -->
-        <Transition name="fade">
-          <div
-            v-if="isTransitioning"
-            class="transition-overlay"
-          >
-            <div class="transition-text">
-              Loading...
-            </div>
-          </div>
         </Transition>
       </div>
     </Transition>
@@ -283,28 +290,6 @@ onUnmounted(() => {
   font-size: 1rem;
 }
 
-/* Transition Overlay */
-.transition-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.transition-text {
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
-  color: var(--color-origin);
-  animation: blink 0.5s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
 
 /* Transitions */
 .fade-enter-active,
