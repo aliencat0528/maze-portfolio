@@ -31,11 +31,13 @@
 npm run dev        # 開發伺服器
 npm run build      # vue-tsc -b && vite build（含型別檢查）
 npm run preview    # 預覽 production build
+npm run lint       # ESLint（--max-warnings 0）
 ```
 
-**Commit 前必做**：`npm run build`（型別檢查含在內）
+**Commit 前必做**：`npm run lint` + `npm run build` 皆須通過。
 
-⚠️ **本專案尚無 `npm run lint`**。根 CLAUDE.md 要求 commit 前 lint 必須通過，但此專案缺 ESLint 設定 —— 補齊前，commit 前檢查以 `npm run build` 代替。待補，見 MR-003。
+> ESLint 釘在 v9：本機 Node 為 v18，ESLint 10 要求 Node ^20.19 以上，實測會拋
+> `util.styleText is not a function`。升 Node 之前不要升 ESLint（見 MR-003）。
 
 ---
 

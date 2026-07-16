@@ -34,10 +34,12 @@ npm install          # 安裝依賴
 npm run dev          # 開發伺服器
 npm run build        # production 建置（含 vue-tsc 型別檢查）
 npm run preview      # 預覽建置結果
+npm run lint         # ESLint（--max-warnings 0）
 ```
 
 ## Commit 前必做（在全域清單之上「新增」，不取代）
 
+- [ ] `npm run lint` → 零警告
 - [ ] `npm run build` → 確保 TypeScript 編譯通過
 - [ ] 瀏覽器實測 → 確認功能正常
 
