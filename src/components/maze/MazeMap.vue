@@ -21,9 +21,26 @@ const {
 
 const { isMobile } = useDevice()
 
-/** 一格的邊長（SVG 單位），走廊格與房間格同寬 */
+/**
+ * 渲染尺寸（MR-006）。
+ *
+ * 重畫前走廊是 stroke-width 11 的裸線條，看起來像水管而不是地牢 —— 沒有地板、
+ * 沒有牆、沒有厚度。現在改成兩層畫法：
+ *
+ *   1. 牆層：把所有可走區域「膨脹」WALL 後填磚牆紋理
+ *   2. 地板層：同樣的形狀以正常大小填地板色，蓋在牆層上
+ *
+ * 牆因此只留在地板沒覆蓋到的地方。走廊接房間處，走廊地板會在房間牆上打出一個
+ * 洞 —— 那就是門框，不需要特別判斷哪裡該開門。
+ *
+ * 牆層不套迷霧、永遠可見 = MR-006 的「全圖輪廓可見」；迷霧只調地板與內容。
+ */
 const CELL = 48
-const PADDING = 20
+/** viewBox 外距。要留得比牆厚 + 發光半徑大，否則邊緣房間的光暈與標籤會被 viewBox 切掉 */
+const PADDING = 34
+const WALL = 5
+const ROOM_FLOOR = CELL
+const CORRIDOR_FLOOR = 18
 
 const viewBox = computed(
   () => `0 0 ${maze.width * CELL + PADDING * 2} ${maze.height * CELL + PADDING * 2}`
@@ -58,18 +75,32 @@ const armsOf = (cell: MazeCell) => {
   })
 }
 
-const roomNodes = computed(() =>
-  roomConfigs.map(room => ({
-    ...room,
-    center: centerOf(maze.nodeCell.get(room.id) as Point),
-    fog: nodeFog(room.id)
-  }))
+/** 攤平成一維陣列，讓牆層與地板層共用同一份幾何，不會兩層畫出不同形狀 */
+const corridorArms = computed(() =>
+  corridors.value.flatMap(cell =>
+    armsOf(cell).map(arm => ({ ...arm, fog: cellFog(cell) }))
+  )
 )
 
-const entranceNode = computed(() => ({
-  center: centerOf(maze.nodeCell.get('entrance') as Point),
-  fog: nodeFog('entrance')
-}))
+const nodes = computed(() => {
+  const entrance = {
+    id: 'entrance' as NodeId,
+    name: 'START',
+    icon: '',
+    center: centerOf(maze.nodeCell.get('entrance') as Point),
+    fog: nodeFog('entrance'),
+    isEntrance: true
+  }
+  const rooms = roomConfigs.map(room => ({
+    id: room.id as NodeId,
+    name: room.name,
+    icon: room.icon,
+    center: centerOf(maze.nodeCell.get(room.id) as Point),
+    fog: nodeFog(room.id),
+    isEntrance: false
+  }))
+  return [entrance, ...rooms]
+})
 
 const playerPos = computed(() => centerOf(playerCell.value))
 
@@ -91,107 +122,167 @@ const handleNodeClick = (nodeId: NodeId) => {
       class="maze-svg"
       preserveAspectRatio="xMidYMid meet"
     >
-      <!-- 走廊 -->
-      <g class="corridors">
-        <template
-          v-for="cell in corridors"
-          :key="cellKey(cell.point)"
+      <defs>
+        <!-- 磚牆紋理。userSpaceOnUse 讓磚縫跨格對齊，不會每格重新起算 -->
+        <pattern
+          id="brickWall"
+          width="16"
+          height="8"
+          patternUnits="userSpaceOnUse"
         >
-          <line
-            v-for="arm in armsOf(cell)"
-            :key="arm.key"
-            :x1="arm.x1"
-            :y1="arm.y1"
-            :x2="arm.x2"
-            :y2="arm.y2"
-            :class="['corridor', `fog-${cellFog(cell)}`]"
+          <rect
+            width="16"
+            height="8"
+            class="brick-face"
           />
-        </template>
-      </g>
+          <path
+            d="M0 0.5 H16 M0 4.5 H16 M5 0.5 V4.5 M13 4.5 V8"
+            class="brick-mortar"
+          />
+        </pattern>
 
-      <!-- 入口 -->
-      <g
-        v-if="entranceNode.fog !== 'hidden'"
-        class="entrance-node"
-        :transform="`translate(${entranceNode.center.x}, ${entranceNode.center.y})`"
-      >
-        <rect
-          class="entrance-box"
-          x="-16"
-          y="-16"
-          width="32"
-          height="32"
-        />
-        <!-- 標籤放在框外下方：角色圓點會停在入口正中央，放框內會被蓋住 -->
-        <text
-          class="entrance-label"
-          y="27"
-          text-anchor="middle"
+        <!-- 虛空網格：v1 有這層底紋，重寫時弄丟了，補回來 -->
+        <pattern
+          id="voidGrid"
+          width="12"
+          height="12"
+          patternUnits="userSpaceOnUse"
         >
-          START
-        </text>
+          <path
+            d="M12 0 V12 M0 12 H12"
+            class="void-line"
+          />
+        </pattern>
+      </defs>
+
+      <rect
+        width="100%"
+        height="100%"
+        fill="url(#voidGrid)"
+      />
+
+      <!-- 第 1 層：牆體（膨脹後的可走區域）。不套迷霧 —— 這就是全圖輪廓 -->
+      <g class="walls">
+        <line
+          v-for="arm in corridorArms"
+          :key="`w-${arm.key}`"
+          :x1="arm.x1"
+          :y1="arm.y1"
+          :x2="arm.x2"
+          :y2="arm.y2"
+          class="wall-stroke"
+          :stroke-width="CORRIDOR_FLOOR + WALL * 2"
+        />
+        <rect
+          v-for="node in nodes"
+          :key="`w-${node.id}`"
+          class="wall-fill"
+          :x="node.center.x - ROOM_FLOOR / 2 - WALL"
+          :y="node.center.y - ROOM_FLOOR / 2 - WALL"
+          :width="ROOM_FLOOR + WALL * 2"
+          :height="ROOM_FLOOR + WALL * 2"
+        />
       </g>
 
-      <!-- 房間 -->
-      <g
-        v-for="room in roomNodes"
-        v-show="room.fog !== 'hidden'"
-        :key="room.id"
-        class="room-node"
-        :class="[`theme-${room.id}`, `fog-${room.fog}`, { current: standingOn === room.id }]"
-        :transform="`translate(${room.center.x}, ${room.center.y})`"
-        @click="handleNodeClick(room.id)"
-      >
+      <!-- 第 2 層：地板。蓋掉牆層，只在沒地板的地方留下牆 -->
+      <g class="floors">
+        <line
+          v-for="arm in corridorArms"
+          :key="`f-${arm.key}`"
+          :x1="arm.x1"
+          :y1="arm.y1"
+          :x2="arm.x2"
+          :y2="arm.y2"
+          :class="['floor-stroke', `fog-${arm.fog}`]"
+          :stroke-width="CORRIDOR_FLOOR"
+        />
         <rect
-          class="room-box"
-          x="-21"
-          y="-21"
-          width="42"
-          height="42"
-          rx="2"
+          v-for="node in nodes"
+          :key="`f-${node.id}`"
+          :class="['floor-fill', `fog-${node.fog}`, `theme-${node.id}`]"
+          :x="node.center.x - ROOM_FLOOR / 2"
+          :y="node.center.y - ROOM_FLOOR / 2"
+          :width="ROOM_FLOOR"
+          :height="ROOM_FLOOR"
+        />
+      </g>
+
+      <!-- 第 3 層：房間內容。點擊區也在這層 -->
+      <g
+        v-for="node in nodes"
+        :key="`c-${node.id}`"
+        class="room-node"
+        :class="[`theme-${node.id}`, `fog-${node.fog}`, { current: standingOn === node.id }]"
+        :transform="`translate(${node.center.x}, ${node.center.y})`"
+        @click="handleNodeClick(node.id)"
+      >
+        <!-- 透明點擊區：地板已在下層畫好，這裡只負責收事件 -->
+        <rect
+          class="hit-area"
+          :x="-ROOM_FLOOR / 2"
+          :y="-ROOM_FLOOR / 2"
+          :width="ROOM_FLOOR"
+          :height="ROOM_FLOOR"
         />
 
-        <!-- 已探明的房間才露出圖示與名稱；只是「鄰接可見」的房間僅有輪廓與問號 -->
-        <template v-if="room.fog === 'visible'">
+        <template v-if="node.isEntrance">
           <text
-            class="room-icon"
-            y="-2"
+            class="entrance-label"
+            y="3"
             text-anchor="middle"
           >
-            {{ room.icon }}
+            START
+          </text>
+        </template>
+
+        <!-- 已探明才露出圖示與名稱；未探明的只有輪廓，探明前不知道是什麼房間 -->
+        <template v-else-if="node.fog === 'visible'">
+          <text
+            class="room-icon"
+            y="-3"
+            text-anchor="middle"
+          >
+            {{ node.icon }}
           </text>
           <text
             class="room-name"
             y="15"
             text-anchor="middle"
           >
-            {{ room.name }}
+            {{ node.name }}
           </text>
         </template>
         <text
-          v-else
+          v-else-if="node.fog === 'dim'"
           class="room-unknown"
-          y="5"
+          y="6"
           text-anchor="middle"
         >
           ?
         </text>
       </g>
 
-      <!-- 角色 -->
+      <!-- 第 4 層：角色 -->
       <g
         class="player"
         :class="{ moving: isMoving }"
         :transform="`translate(${playerPos.x}, ${playerPos.y})`"
       >
         <circle
-          class="player-dot"
-          r="6"
+          class="player-glow"
+          r="13"
+        />
+        <rect
+          class="player-body"
+          x="-4"
+          y="-5"
+          width="8"
+          height="10"
         />
       </g>
     </svg>
 
-    <!-- 探索進度 -->
+    <!-- HUD -->
     <div class="maze-hud">
       <div class="hud-progress">
         <span class="hud-label">探索進度</span>
@@ -214,7 +305,6 @@ const handleNodeClick = (nodeId: NodeId) => {
       </button>
     </div>
 
-    <!-- 操作提示 -->
     <p class="maze-hint">
       <template v-if="showOverview">
         總覽模式：全圖已揭開，可直接點選任一房間
@@ -245,100 +335,125 @@ const handleNodeClick = (nodeId: NodeId) => {
 
 .maze-svg {
   width: 100%;
-  max-width: 560px;
+  max-width: 620px;
   height: auto;
-  max-height: 58vh;
+  max-height: 60vh;
 }
 
-/* --- 迷霧 --------------------------------------------------------- */
-.fog-visible {
-  opacity: 1;
+/* --- 紋理 --------------------------------------------------------- */
+.brick-face {
+  fill: var(--color-wall);
 }
 
-.fog-dim {
-  opacity: 0.28;
+.brick-mortar {
+  stroke: var(--color-wall-mortar);
+  stroke-width: 1;
+  fill: none;
 }
 
-/* 房間靠 v-show 移除，走廊只掛 class —— 少了這條規則走廊會套用預設
-   opacity 1，整張圖的走廊全部曝光（迷霧等同失效）。 */
-.fog-hidden {
-  opacity: 0;
+.void-line {
+  stroke: var(--color-void-grid);
+  stroke-width: 0.5;
+  fill: none;
 }
 
-/* --- 走廊 --------------------------------------------------------- */
-.corridor {
-  stroke: var(--color-amber);
-  stroke-width: 11;
+/* --- 牆體：永遠可見，構成全圖輪廓 --------------------------------- */
+.wall-fill {
+  fill: url(#brickWall);
+}
+
+.wall-stroke {
+  stroke: url(#brickWall);
   stroke-linecap: butt;
-  transition: opacity 0.4s ease;
 }
 
-.corridor.fog-visible {
-  filter: drop-shadow(0 0 4px var(--color-amber));
+/* --- 地板：迷霧只作用在這層與內容層 ------------------------------- */
+.floor-fill,
+.floor-stroke {
+  transition: fill 0.5s ease, stroke 0.5s ease;
 }
 
-/* --- 入口 --------------------------------------------------------- */
-.entrance-box {
-  fill: var(--color-bg);
-  stroke: var(--color-amber);
-  stroke-width: 2;
+.floor-stroke {
+  stroke-linecap: butt;
+}
+
+.floor-fill.fog-hidden {
+  fill: var(--color-floor-dark);
+}
+
+.floor-stroke.fog-hidden {
+  stroke: var(--color-floor-dark);
+}
+
+.floor-fill.fog-dim {
+  fill: var(--color-floor-dim);
+}
+
+.floor-stroke.fog-dim {
+  stroke: var(--color-floor-dim);
+}
+
+/* 探明的地板染上該房間的色溫，並透出微光 —— 這是探索的獎勵 */
+.floor-fill.fog-visible {
+  fill: var(--color-floor-lit);
+  filter: drop-shadow(0 0 7px var(--room-color, var(--color-amber)));
+}
+
+.floor-stroke.fog-visible {
+  stroke: var(--color-floor-lit);
+}
+
+/* --- 內容 --------------------------------------------------------- */
+.room-node {
+  cursor: pointer;
+}
+
+.hit-area {
+  fill: transparent;
+}
+
+.room-node:hover .room-icon {
+  filter: drop-shadow(0 0 6px var(--room-color));
+}
+
+.room-node.current .room-name {
+  animation: name-pulse 1.6s infinite;
+}
+
+.entrance-label,
+.room-unknown {
+  font-family: 'Press Start 2P', cursive;
 }
 
 .entrance-label {
-  font-family: 'Press Start 2P', cursive;
   font-size: 6px;
   fill: var(--color-amber);
 }
 
-/* --- 房間 --------------------------------------------------------- */
-.room-node {
-  cursor: pointer;
-  transition: opacity 0.4s ease;
-}
-
-.room-box {
-  fill: var(--color-bg);
-  stroke: var(--room-color);
-  stroke-width: 2;
-}
-
-.room-node.fog-visible .room-box {
-  filter: drop-shadow(0 0 6px var(--room-color));
-}
-
-.room-node:hover .room-box {
-  stroke-width: 3;
-  filter: drop-shadow(0 0 12px var(--room-color));
-}
-
-.room-node.current .room-box {
-  animation: room-pulse 1.5s infinite;
-}
-
 .room-icon {
-  font-size: 17px;
+  font-size: 18px;
 }
 
 .room-name {
   font-family: 'VT323', monospace;
   font-size: 9px;
   fill: var(--room-color);
+  text-shadow: 0 0 4px var(--room-color);
 }
 
 .room-unknown {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 10px;
-  fill: var(--room-color);
+  font-size: 11px;
+  fill: var(--color-text-dim);
 }
 
-@keyframes room-pulse {
+@keyframes name-pulse {
   0%,
   100% {
-    filter: drop-shadow(0 0 5px var(--room-color));
+    opacity: 1;
   }
 
   50% {
-    filter: drop-shadow(0 0 16px var(--room-color));
+    opacity: 0.45;
   }
 }
 
@@ -347,15 +462,18 @@ const handleNodeClick = (nodeId: NodeId) => {
   transition: transform 0.09s linear;
 }
 
-.player-dot {
+.player-glow {
+  fill: var(--color-amber);
+  opacity: 0.16;
+}
+
+.player-body {
   fill: var(--color-amber-bright);
-  stroke: var(--color-bg);
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 6px var(--color-amber-bright));
+  filter: drop-shadow(0 0 5px var(--color-amber-bright));
   animation: player-blink 1.2s infinite;
 }
 
-.player.moving .player-dot {
+.player.moving .player-body {
   animation: none;
 }
 
@@ -366,7 +484,7 @@ const handleNodeClick = (nodeId: NodeId) => {
   }
 
   50% {
-    opacity: 0.55;
+    opacity: 0.6;
   }
 }
 
@@ -375,7 +493,7 @@ const handleNodeClick = (nodeId: NodeId) => {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .hud-progress {
@@ -401,8 +519,8 @@ const handleNodeClick = (nodeId: NodeId) => {
 }
 
 .hud-progress .nes-progress {
-  width: 160px;
-  height: 26px;
+  width: 150px;
+  height: 24px;
   margin: 0;
 }
 
@@ -422,9 +540,5 @@ const handleNodeClick = (nodeId: NodeId) => {
 .maze-map--mobile .maze-hud {
   flex-direction: column;
   gap: 10px;
-}
-
-.maze-map--mobile .hud-progress .nes-progress {
-  width: 120px;
 }
 </style>

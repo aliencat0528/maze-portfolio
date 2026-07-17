@@ -98,9 +98,10 @@ export function useExploration() {
     if (isMoving.value) return
 
     const target = maze.nodeCell.get(nodeId)
-    // 還看不見的房間不能點 —— 你不該知道它存在
-    if (!target || nodeFog(nodeId) === 'hidden') return
+    if (!target) return
 
+    // 不擋未探明的房間（MR-006）：全圖輪廓既然一開始就看得見，點了卻沒反應只會
+    // 讓人以為壞掉。迷霧現在擋的是「這間是什麼」，不是「能不能走過去」。
     const path = findPath(playerCell.value, target, maze.cells)
     isMoving.value = true
     for (const cell of path) {

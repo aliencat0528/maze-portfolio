@@ -172,6 +172,16 @@
   --color-text: #ffc46b;
   --color-text-dim: #9c7433;
   --color-border: #55401a;
+
+  /* 地牢材質（MR-006）
+     單色下的視覺層次全靠明暗，不靠色相 —— 牆最亮（有磚紋）、地板依探索
+     程度分三階、虛空最暗。這是「保留琥珀但補回層次」的具體手段。 */
+  --color-wall: #6b4d1c;        /* 磚面 */
+  --color-wall-mortar: #2b1e08; /* 磚縫 */
+  --color-floor-lit: #3a2708;   /* 已探明地板 */
+  --color-floor-dim: #1f1505;   /* 鄰接未探明 */
+  --color-floor-dark: #150e03;  /* 未探明 —— 仍比虛空亮，輪廓才看得出來 */
+  --color-void-grid: #1c1305;   /* 虛空網格 */
 }
 
 /* 房間主題類別 */
@@ -181,6 +191,7 @@
 .theme-skill { --room-color: var(--color-skill); }
 .theme-achievement { --room-color: var(--color-achievement); }
 .theme-contact { --room-color: var(--color-contact); }
+.theme-entrance { --room-color: var(--color-amber); }
 
 /* 路徑發光效果 */
 .path-unexplored {
