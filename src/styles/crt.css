@@ -150,18 +150,38 @@
   50% { opacity: 1; }
 }
 
-/* 房間主題色變數 */
+/* 琥珀單色終端機調色盤（MR-005）
+   全站單一色相，六房間僅以「色溫」區分：試煉最熱（深橘）→ 起源最冷（淡金）。
+   刻意不使用異色相 —— 模擬單色 CRT 只有一種磷光的物理限制。 */
 :root {
-  --color-origin: #14fdce;
-  --color-quest: #ff6b6b;
-  --color-treasure: #ffd93d;
-  --color-skill: #6bcfff;
-  --color-achievement: #c77dff;
-  --color-contact: #ffb000;
-  --color-bg: #0a0a0a;
-  --color-text: #e0e0e0;
-  --color-text-dim: #666666;
-  --color-border: #333333;
+  /* 基準琥珀 */
+  --color-amber: #ffb000;
+  --color-amber-bright: #ffd166;
+  --color-amber-deep: #ff7a14;
+
+  /* 六房間色溫階（由冷到熱） */
+  --color-origin: #ffe6b0;      /* 起源之廳 — 最淡金 */
+  --color-treasure: #ffd23d;    /* 寶藏室 — 金黃 */
+  --color-achievement: #ffbe55; /* 成就牆 — 淺琥珀 */
+  --color-contact: #ffb000;     /* 終點塔 — 基準琥珀 */
+  --color-skill: #ff9c2e;       /* 技能樹 — 橘琥珀 */
+  --color-quest: #ff7a14;       /* 試煉之路 — 深橘（最熱） */
+
+  /* 底色與文字 —— 單色終端機連文字都是琥珀，不是白灰 */
+  --color-bg: #0f0a02;          /* 暖黑（非純黑，帶琥珀餘溫） */
+  --color-text: #ffc46b;
+  --color-text-dim: #9c7433;
+  --color-border: #55401a;
+
+  /* 地牢材質（MR-006）
+     單色下的視覺層次全靠明暗，不靠色相 —— 牆最亮（有磚紋）、地板依探索
+     程度分三階、虛空最暗。這是「保留琥珀但補回層次」的具體手段。 */
+  --color-wall: #6b4d1c;        /* 磚面 */
+  --color-wall-mortar: #2b1e08; /* 磚縫 */
+  --color-floor-lit: #3a2708;   /* 已探明地板 */
+  --color-floor-dim: #1f1505;   /* 鄰接未探明 */
+  --color-floor-dark: #150e03;  /* 未探明 —— 仍比虛空亮，輪廓才看得出來 */
+  --color-void-grid: #1c1305;   /* 虛空網格 */
 }
 
 /* 房間主題類別 */
@@ -171,6 +191,7 @@
 .theme-skill { --room-color: var(--color-skill); }
 .theme-achievement { --room-color: var(--color-achievement); }
 .theme-contact { --room-color: var(--color-contact); }
+.theme-entrance { --room-color: var(--color-amber); }
 
 /* 路徑發光效果 */
 .path-unexplored {

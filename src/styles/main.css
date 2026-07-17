@@ -1,7 +1,10 @@
 /* 主樣式文件 */
 @import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap');
-@import 'nes.css/css/nes.min.css';
+/* nes-core = nes.css 去掉像素精靈圖（Mario/Kirby/寶可夢）後的 UI 元件層，288K → 52K。
+   精靈圖對履歷無用途，見 MR-003。配色由 nes-amber.css 覆寫為琥珀單色。 */
+@import 'nes.css/css/nes-core.min.css';
 @import './crt.css';
+@import './nes-amber.css';
 
 /* 基礎重置 */
 *,

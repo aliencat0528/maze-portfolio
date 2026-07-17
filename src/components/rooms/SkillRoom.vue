@@ -30,10 +30,12 @@ const getLevelBars = (level: number) => {
         <!-- 類別標題 -->
         <header class="category-header">
           <span class="category-icon">{{ categoryIcons[category.category] }}</span>
-          <h2 class="category-title">{{ category.categoryName }}</h2>
+          <h2 class="category-title">
+            {{ category.categoryName }}
+          </h2>
         </header>
 
-        <div class="divider"></div>
+        <div class="divider" />
 
         <!-- 技能列表 -->
         <div class="skill-list">

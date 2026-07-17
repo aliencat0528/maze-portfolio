@@ -33,8 +33,12 @@ const closeTreasure = () => {
         :class="`rarity-${treasure.rarity}`"
         @click="selectTreasure(treasure)"
       >
-        <div class="treasure-icon">💎</div>
-        <h3 class="treasure-name">{{ treasure.name }}</h3>
+        <div class="treasure-icon">
+          💎
+        </div>
+        <h3 class="treasure-name">
+          {{ treasure.name }}
+        </h3>
         <span class="treasure-rarity">{{ rarityLabels[treasure.rarity] }}</span>
         <span class="treasure-type text-dim">{{ treasure.type }}</span>
       </div>
@@ -42,15 +46,29 @@ const closeTreasure = () => {
 
     <!-- 寶物詳情彈窗 -->
     <Teleport to="body">
-      <div v-if="selectedTreasure" class="treasure-modal" @click.self="closeTreasure">
-        <div class="modal-content terminal-box crt-scanlines" :class="`rarity-${selectedTreasure.rarity}`">
-          <button class="btn-close" @click="closeTreasure">×</button>
+      <div
+        v-if="selectedTreasure"
+        class="treasure-modal"
+        @click.self="closeTreasure"
+      >
+        <div
+          class="modal-content terminal-box crt-scanlines"
+          :class="`rarity-${selectedTreasure.rarity}`"
+        >
+          <button
+            class="btn-close"
+            @click="closeTreasure"
+          >
+            ×
+          </button>
 
           <!-- 寶物標題 -->
           <header class="modal-header">
             <span class="treasure-icon-large">💎</span>
             <div class="treasure-info">
-              <h2 class="treasure-title">{{ selectedTreasure.name }}</h2>
+              <h2 class="treasure-title">
+                {{ selectedTreasure.name }}
+              </h2>
               <div class="treasure-meta">
                 <span class="rarity-badge">{{ rarityLabels[selectedTreasure.rarity] }}</span>
                 <span class="type-badge">{{ selectedTreasure.type }}</span>
@@ -58,17 +76,23 @@ const closeTreasure = () => {
             </div>
           </header>
 
-          <div class="divider"></div>
+          <div class="divider" />
 
           <!-- 鍛造方式 -->
           <section class="modal-section">
-            <h3 class="section-label">> 鍛造方式</h3>
-            <p class="text-primary">{{ selectedTreasure.role }}</p>
+            <h3 class="section-label">
+              > 鍛造方式
+            </h3>
+            <p class="text-primary">
+              {{ selectedTreasure.role }}
+            </p>
           </section>
 
           <!-- 材料成分 -->
           <section class="modal-section">
-            <h3 class="section-label">> 材料成分</h3>
+            <h3 class="section-label">
+              > 材料成分
+            </h3>
             <div class="tech-tags">
               <span
                 v-for="tech in selectedTreasure.technologies"
@@ -82,7 +106,9 @@ const closeTreasure = () => {
 
           <!-- 屬性加成 -->
           <section class="modal-section">
-            <h3 class="section-label">> 屬性加成</h3>
+            <h3 class="section-label">
+              > 屬性加成
+            </h3>
             <div class="stats-list">
               <div
                 v-for="stat in selectedTreasure.stats"
@@ -94,7 +120,7 @@ const closeTreasure = () => {
                   <div
                     class="stat-fill"
                     :style="{ width: `${stat.value}%` }"
-                  ></div>
+                  />
                 </div>
                 <span class="stat-value">+{{ stat.value }}%</span>
               </div>
@@ -102,7 +128,10 @@ const closeTreasure = () => {
           </section>
 
           <!-- 查看連結 -->
-          <footer class="modal-footer" v-if="selectedTreasure.link">
+          <footer
+            v-if="selectedTreasure.link"
+            class="modal-footer"
+          >
             <a
               :href="selectedTreasure.link"
               target="_blank"

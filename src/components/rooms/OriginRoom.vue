@@ -8,16 +8,24 @@ const { origin, basic } = resumeData
   <div class="origin-room">
     <!-- 角色資訊 -->
     <section class="section character-info">
-      <h2 class="section-title">> 角色檔案</h2>
+      <h2 class="section-title">
+        > 角色檔案
+      </h2>
       <div class="character-card terminal-box">
         <div class="character-header">
           <div class="character-avatar">
             <span class="avatar-placeholder">👤</span>
           </div>
           <div class="character-details">
-            <h3 class="character-name">{{ basic.name }}</h3>
-            <p class="character-title text-accent">{{ basic.title }}</p>
-            <p class="character-tagline text-dim">"{{ basic.tagline }}"</p>
+            <h3 class="character-name">
+              {{ basic.name }}
+            </h3>
+            <p class="character-title text-accent">
+              {{ basic.title }}
+            </p>
+            <p class="character-tagline text-dim">
+              "{{ basic.tagline }}"
+            </p>
           </div>
         </div>
       </div>
@@ -25,17 +33,26 @@ const { origin, basic } = resumeData
 
     <!-- 背景故事 -->
     <section class="section">
-      <h2 class="section-title">> 背景故事</h2>
+      <h2 class="section-title">
+        > 背景故事
+      </h2>
       <div class="terminal-box">
-        <p class="story-text">{{ origin.background }}</p>
+        <p class="story-text">
+          {{ origin.background }}
+        </p>
       </div>
     </section>
 
     <!-- 核心價值觀 -->
     <section class="section">
-      <h2 class="section-title">> 角色信念</h2>
+      <h2 class="section-title">
+        > 角色信念
+      </h2>
       <ul class="list-terminal values-list">
-        <li v-for="(value, index) in origin.values" :key="index">
+        <li
+          v-for="(value, index) in origin.values"
+          :key="index"
+        >
           {{ value }}
         </li>
       </ul>
@@ -43,7 +60,9 @@ const { origin, basic } = resumeData
 
     <!-- 人生轉折點 -->
     <section class="section">
-      <h2 class="section-title">> 命運的岔路口</h2>
+      <h2 class="section-title">
+        > 命運的岔路口
+      </h2>
       <div class="turning-points">
         <div
           v-for="(point, index) in origin.turningPoints"
@@ -54,7 +73,9 @@ const { origin, basic } = resumeData
             <span class="point-year text-accent">[ {{ point.year }} ]</span>
             <span class="point-title">{{ point.title }}</span>
           </div>
-          <p class="point-description text-dim">{{ point.description }}</p>
+          <p class="point-description text-dim">
+            {{ point.description }}
+          </p>
         </div>
       </div>
     </section>
