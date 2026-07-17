@@ -122,9 +122,10 @@ const handleNodeClick = (nodeId: NodeId) => {
           width="32"
           height="32"
         />
+        <!-- 標籤放在框外下方：角色圓點會停在入口正中央，放框內會被蓋住 -->
         <text
           class="entrance-label"
-          y="3"
+          y="27"
           text-anchor="middle"
         >
           START
@@ -256,6 +257,12 @@ const handleNodeClick = (nodeId: NodeId) => {
 
 .fog-dim {
   opacity: 0.28;
+}
+
+/* 房間靠 v-show 移除，走廊只掛 class —— 少了這條規則走廊會套用預設
+   opacity 1，整張圖的走廊全部曝光（迷霧等同失效）。 */
+.fog-hidden {
+  opacity: 0;
 }
 
 /* --- 走廊 --------------------------------------------------------- */
