@@ -50,12 +50,12 @@ const TEXTURES: Record<CategoryId, string> = {
 function theme(
   id: CategoryId,
   accent: string,
-  accentSoft: string,
+  accentDark: string,
   easing: string,
   radius: string,
   border: string,
 ): CategoryTheme {
-  return { accent, accentSoft, texture: TEXTURES[id], easing, radius, border }
+  return { accent, accentDark, texture: TEXTURES[id], easing, radius, border }
 }
 
 export const CATEGORIES: Category[] = [
@@ -64,49 +64,49 @@ export const CATEGORIES: Category[] = [
     label: '壓克力畫',
     code: 'ACR',
     // 厚塗：較重的外框、幾乎不圓角、帶一點回彈
-    theme: theme('acrylic', '#c2410c', '#f3ded3', 'cubic-bezier(0.34, 1.16, 0.64, 1)', '2px', '2px'),
+    theme: theme('acrylic', '#c2410c', '#ff8a4c', 'cubic-bezier(0.34, 1.16, 0.64, 1)', '2px', '2px'),
   },
   {
     id: 'watercolor',
     label: '水彩畫',
     code: 'WTC',
     // 柔邊：大圓角、細框、慢柔曲線
-    theme: theme('watercolor', '#2563a8', '#d9e4f2', 'cubic-bezier(0.33, 1, 0.68, 1)', '14px', '1px'),
+    theme: theme('watercolor', '#2563a8', '#6ea8e8', 'cubic-bezier(0.33, 1, 0.68, 1)', '14px', '1px'),
   },
   {
     id: 'calligraphy',
     label: '書法',
     code: 'CAL',
     // 提按：直角、墨色、起收筆的快慢對比
-    theme: theme('calligraphy', '#3d3a35', '#e2ded6', 'cubic-bezier(0.65, 0, 0.35, 1)', '0px', '1px'),
+    theme: theme('calligraphy', '#3d3a35', '#d8d2c6', 'cubic-bezier(0.65, 0, 0.35, 1)', '0px', '1px'),
   },
   {
     id: 'sculpture',
     label: '立體作品',
     code: 'SCP',
     // 量體：小圓角、厚框、沉穩的減速
-    theme: theme('sculpture', '#6b6355', '#e6e2da', 'cubic-bezier(0.22, 1, 0.36, 1)', '4px', '2px'),
+    theme: theme('sculpture', '#6b6355', '#c4b8a2', 'cubic-bezier(0.22, 1, 0.36, 1)', '4px', '2px'),
   },
   {
     id: 'animation',
     label: '動畫',
     code: 'ANM',
     // 現代感：無圓角、細框、快進慢出
-    theme: theme('animation', '#7c3aed', '#e6ddf7', 'cubic-bezier(0.16, 1, 0.3, 1)', '0px', '1px'),
+    theme: theme('animation', '#7c3aed', '#b18aff', 'cubic-bezier(0.16, 1, 0.3, 1)', '0px', '1px'),
   },
   {
     id: 'newmedia',
     label: '新媒體',
     code: 'NEW',
     // 數位：硬切曲線、極細框
-    theme: theme('newmedia', '#0d8a80', '#d5eae7', 'cubic-bezier(0.83, 0, 0.17, 1)', '0px', '1px'),
+    theme: theme('newmedia', '#0d8a80', '#3fd6c8', 'cubic-bezier(0.83, 0, 0.17, 1)', '0px', '1px'),
   },
 ]
 
 /** 「全部」不是分類，是篩選狀態，故用中性主題且無紋理 */
 export const ALL_THEME: CategoryTheme = {
   accent: '#1c1c1a',
-  accentSoft: '#e8e7e3',
+  accentDark: '#f0efec',
   texture: 'none',
   easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
   radius: '2px',

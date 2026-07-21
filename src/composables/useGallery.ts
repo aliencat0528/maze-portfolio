@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import type { FilterId, Work } from '@/types'
 import { CATEGORIES } from '@/data/categories'
-import { WORKS } from '@/data/works'
+import { useLibrary } from '@/composables/useLibrary'
 
 /**
  * 作品牆狀態：分類篩選與詳情頁選取，並與網址同步。
@@ -11,19 +11,21 @@ import { WORKS } from '@/data/works'
  */
 
 const VALID_CATEGORIES = new Set<string>(CATEGORIES.map((category) => category.id))
-const VALID_WORK_IDS = new Set<string>(WORKS.map((work) => work.id))
 
 const activeCategory = ref<FilterId>('all')
 const selectedId = ref<string | null>(null)
 
+const { allWorks } = useLibrary()
+
 const filteredWorks = computed<Work[]>(() =>
   activeCategory.value === 'all'
-    ? WORKS
-    : WORKS.filter((work) => work.category === activeCategory.value),
+    ? allWorks.value
+    : allWorks.value.filter((work) => work.category === activeCategory.value),
 )
 
+// 找不到就是 null——自訂作品的深連結在 IndexedDB 載完前會短暫落在這裡，屬正常
 const selectedWork = computed<Work | null>(
-  () => WORKS.find((work) => work.id === selectedId.value) ?? null,
+  () => allWorks.value.find((work) => work.id === selectedId.value) ?? null,
 )
 
 /** 詳情頁的上／下一件，範圍限定在目前篩選結果內 */
@@ -42,9 +44,8 @@ function buildUrl(): string {
 function readUrl(): void {
   const params = new URLSearchParams(window.location.search)
   const category = params.get('c')
-  const work = params.get('w')
   activeCategory.value = category && VALID_CATEGORIES.has(category) ? (category as FilterId) : 'all'
-  selectedId.value = work && VALID_WORK_IDS.has(work) ? work : null
+  selectedId.value = params.get('w')
 }
 
 export function useGallery() {
@@ -57,7 +58,6 @@ export function useGallery() {
   }
 
   function openWork(id: string): void {
-    if (!VALID_WORK_IDS.has(id)) return
     selectedId.value = id
     window.history.pushState(null, '', buildUrl())
   }
@@ -79,7 +79,6 @@ export function useGallery() {
 
   return {
     categories: CATEGORIES,
-    works: WORKS,
     activeCategory,
     filteredWorks,
     selectedWork,

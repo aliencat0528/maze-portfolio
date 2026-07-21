@@ -71,7 +71,8 @@ const ratio = computed(() => ASPECT_RATIO[props.work.aspect])
   overflow: hidden;
   aspect-ratio: var(--ar);
   background: var(--surface);
-  border: var(--card-border) solid var(--line-strong);
+  /* 外框混入該分類的強調色：換分類時整面牆的框線一起換調子 */
+  border: var(--card-border) solid color-mix(in srgb, var(--accent) 38%, var(--line-strong));
   border-radius: var(--card-radius);
   transition: border-color 320ms var(--ease), box-shadow 320ms var(--ease);
 }
@@ -92,8 +93,8 @@ const ratio = computed(() => ASPECT_RATIO[props.work.aspect])
   font-family: var(--font-mono);
   font-size: 0.58rem;
   letter-spacing: 0.12em;
-  color: var(--ink-soft);
-  background: rgb(255 255 255 / 0.86);
+  color: var(--accent);
+  background: var(--bg);
   opacity: 0;
   transition: opacity 320ms var(--ease);
 }

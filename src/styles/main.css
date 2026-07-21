@@ -36,7 +36,6 @@
 
   /* 分類層預設值（＝ ALL_THEME，見 data/categories.ts） */
   --accent: #1c1c1a;
-  --accent-soft: #e8e7e3;
   --texture: none;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --card-radius: 2px;
@@ -59,9 +58,21 @@ body {
 
 body {
   background-color: var(--bg);
-  /* 紋理隨分類切換，灰階、極低不透明度，不吃作品顏色 */
-  background-image: var(--texture);
   transition: background-color 400ms var(--ease);
+}
+
+/* 紋理鋪在獨立的一層：暗色背景時整層反相，黑線才不會消失在暗底裡 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--texture);
+  pointer-events: none;
+}
+
+:root[data-scheme='dark'] body::before {
+  filter: invert(1);
 }
 
 #app {

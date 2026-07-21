@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Category, FilterId } from '@/types'
-import { PROFILE } from '@/data/works'
 
 /** 站頭：左為作者資訊，右為分類切換（原本的顏色切換改為分類切換，見 MR-008） */
 
@@ -8,6 +7,8 @@ defineProps<{
   categories: Category[]
   active: FilterId
   count: number
+  name: string
+  statement: string
 }>()
 
 const emit = defineEmits<{ select: [id: FilterId] }>()
@@ -17,10 +18,10 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   <header class="header">
     <div class="header__identity">
       <h1 class="header__name">
-        {{ PROFILE.name }}
+        {{ name }}
       </h1>
       <p class="header__statement">
-        {{ PROFILE.statement }}
+        {{ statement }}
       </p>
     </div>
 
@@ -75,13 +76,30 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   justify-content: space-between;
   gap: 1.25rem 2rem;
   padding: clamp(1.25rem, 3vw, 2rem) var(--page-x) 1rem;
-  border-bottom: 1px solid var(--line);
+  /* 站頭底線用強調色：切換分類時整條線換色，是最不干擾作品又看得見的訊號 */
+  border-bottom: 2px solid var(--accent);
+  transition: border-color 320ms var(--ease);
 }
 
 .header__name {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.3rem;
   font-size: clamp(1.1rem, 2.4vw, 1.5rem);
   font-weight: 600;
   letter-spacing: 0.12em;
+}
+
+/* 姓名下的短強調線，跟著分類換色 */
+.header__name::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2.4rem;
+  height: 3px;
+  background: var(--accent);
+  transition: background-color 320ms var(--ease), width 320ms var(--ease);
 }
 
 .header__statement {
@@ -143,17 +161,17 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
   border-color: var(--line-strong);
 }
 
+/* 選中的分類：強調色外框 + 底色，深淺背景下都成立
+   （不靠固定的淺色底，否則暗展廳背景會整塊發亮） */
 .filter.is-active {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-color: var(--accent);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }
 
-.filter.is-active .filter__code {
-  color: var(--accent);
-}
-
+.filter.is-active .filter__code,
 .filter.is-active .filter__label {
-  color: var(--ink);
+  color: var(--accent);
 }
 
 .header__count {

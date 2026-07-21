@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import EditorPanel from '@/components/EditorPanel.vue'
 import IntroSequence from '@/components/IntroSequence.vue'
 import SiteHeader from '@/components/SiteHeader.vue'
 import WorkDetail from '@/components/WorkDetail.vue'
 import WorkRail from '@/components/WorkRail.vue'
-import { useCategoryTheme } from '@/composables/useCategoryTheme'
+import { useAppearance } from '@/composables/useAppearance'
 import { useGallery } from '@/composables/useGallery'
+import { useLibrary } from '@/composables/useLibrary'
 import { usePrefersReducedMotion } from '@/composables/useMediaQuery'
-import { PROFILE } from '@/data/works'
+import { useSettings } from '@/composables/useSettings'
 
 const INTRO_KEY = 'artwall.intro.seen.v1'
 
@@ -23,9 +25,16 @@ const {
   syncFromUrl,
 } = useGallery()
 
-useCategoryTheme(activeCategory)
+const { settings } = useSettings()
+const { init } = useLibrary()
+
+useAppearance(
+  activeCategory,
+  computed(() => settings.value.background),
+)
 
 const reducedMotion = usePrefersReducedMotion()
+const editorOpen = ref(false)
 
 /** localStorage 在 Safari 無痕模式會丟例外，不能讓開場判斷連累整站 */
 function readIntroSeen(): boolean {
@@ -59,6 +68,7 @@ function finishIntro(): void {
 
 onMounted(() => {
   syncFromUrl()
+  init()
   window.addEventListener('popstate', syncFromUrl)
 })
 
@@ -73,6 +83,8 @@ onBeforeUnmount(() => {
       :categories="categories"
       :active="activeCategory"
       :count="filteredWorks.length"
+      :name="settings.name"
+      :statement="settings.statement"
       @select="setCategory"
     />
 
@@ -88,10 +100,19 @@ onBeforeUnmount(() => {
       <p class="app__hint">
         滾動瀏覽長廊 · 點擊作品看細節
       </p>
-      <a
-        class="app__contact"
-        :href="`mailto:${PROFILE.email}`"
-      >{{ PROFILE.email }}</a>
+      <div class="app__footer-right">
+        <button
+          type="button"
+          class="app__edit"
+          @click="editorOpen = true"
+        >
+          編輯內容
+        </button>
+        <a
+          class="app__contact"
+          :href="`mailto:${settings.email}`"
+        >{{ settings.email }}</a>
+      </div>
     </footer>
 
     <WorkDetail
@@ -99,6 +120,11 @@ onBeforeUnmount(() => {
       :work="selectedWork"
       @close="closeWork"
       @step="stepWork"
+    />
+
+    <EditorPanel
+      v-if="editorOpen"
+      @close="editorOpen = false"
     />
 
     <IntroSequence
@@ -130,24 +156,43 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 0.5rem 1.5rem;
   padding: 1rem var(--page-x) 1.5rem;
-  border-top: 1px solid var(--line);
+  /* 頁尾也用強調色收邊，讓分類的存在感貫穿整頁 */
+  border-top: 2px solid var(--accent);
+}
+
+.app__footer-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .app__hint,
-.app__contact {
+.app__contact,
+.app__edit {
   font-family: var(--font-mono);
   font-size: 0.66rem;
   letter-spacing: 0.08em;
   color: var(--ink-faint);
 }
 
-.app__contact {
-  color: var(--ink-soft);
-  text-decoration: none;
-  border-bottom: 1px solid var(--line-strong);
+.app__edit {
+  padding: 0.3rem 0.6rem;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--card-radius);
+  cursor: pointer;
   transition: color 200ms var(--ease), border-color 200ms var(--ease);
 }
 
+.app__contact {
+  color: var(--ink-soft);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  transition: color 200ms var(--ease);
+}
+
+.app__edit:hover,
+.app__edit:focus-visible,
 .app__contact:hover,
 .app__contact:focus-visible {
   color: var(--accent);

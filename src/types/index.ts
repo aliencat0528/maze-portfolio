@@ -16,10 +16,10 @@ export type AspectId = 'square' | 'landscape' | 'portrait' | 'video'
 
 /** 分類主題：只影響「殼」——強調色、動效曲線、卡片邊緣、背景紋理 */
 export interface CategoryTheme {
-  /** 強調色。僅用於線條、標籤、focus ring，不鋪大面積 */
+  /** 強調色。用於結構線、標籤、外框、focus ring，不鋪大面積 */
   accent: string
-  /** 強調色的低彩度版本，用於底線與 hover 底色 */
-  accentSoft: string
+  /** 深色背景用的較亮版本。墨色系在暗底上會整個消失，必須另備 */
+  accentDark: string
   /** 背景紋理（SVG data URI）。一律灰階、不透明度 ≤ 3%，避免偏移作品白平衡 */
   texture: string
   /** 該分類的動效個性 */
@@ -65,6 +65,32 @@ export interface Work {
   /** 原始像素尺寸，供 img width/height 防 CLS */
   width: number
   height: number
+  /** 使用者自行新增的作品（圖片存在 IndexedDB，key 見下） */
+  custom?: boolean
+  /** IndexedDB 中的圖片 key 前綴，實際存兩筆：`${imageKey}-thumb` 與 `${imageKey}-view` */
+  imageKey?: string
+}
+
+/** 整體視覺背景。只換中性層，不動分類主題 */
+export type BackgroundId = 'white-cube' | 'warm-paper' | 'concrete' | 'gallery-dark'
+
+export interface Background {
+  id: BackgroundId
+  label: string
+  /** 暗色底：分類強調色要改用 accentDark，否則墨色系會看不見 */
+  dark: boolean
+  /** 覆寫到 :root 的中性層 CSS 變數 */
+  tokens: Record<string, string>
+}
+
+/** 使用者可自訂的站台設定，存在 localStorage */
+export interface SiteSettings {
+  /** 瀏覽器分頁標題 */
+  siteTitle: string
+  name: string
+  statement: string
+  email: string
+  background: BackgroundId
 }
 
 /** 裝置寬度模式：寬螢幕走水平長廊，窄螢幕降級為垂直網格 */

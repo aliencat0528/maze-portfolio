@@ -317,7 +317,7 @@ onBeforeUnmount(() => {
 
 .tag--category {
   color: var(--accent);
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   border-color: var(--accent);
 }
 
