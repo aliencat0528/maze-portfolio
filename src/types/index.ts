@@ -1,131 +1,71 @@
-// 房間類型定義
-export type RoomType = 'origin' | 'quest' | 'treasure' | 'skill' | 'achievement' | 'contact'
+/** 作品牆型別定義 */
 
-// 迷宮節點識別：入口不是房間，但同樣佔一個格子
-export type NodeId = RoomType | 'entrance'
+export type CategoryId =
+  | 'acrylic'
+  | 'watercolor'
+  | 'calligraphy'
+  | 'sculpture'
+  | 'animation'
+  | 'newmedia'
 
-// 格子座標（非像素座標）
-export interface Point {
-  x: number
-  y: number
+/** 篩選列用：`all` 只存在於 UI 狀態，不會出現在 Work 上 */
+export type FilterId = CategoryId | 'all'
+
+/** 版位比例。卡片一律以此鎖定尺寸，避免圖片撐破版面 */
+export type AspectId = 'square' | 'landscape' | 'portrait' | 'video'
+
+/** 分類主題：只影響「殼」——強調色、動效曲線、卡片邊緣、背景紋理 */
+export interface CategoryTheme {
+  /** 強調色。僅用於線條、標籤、focus ring，不鋪大面積 */
+  accent: string
+  /** 強調色的低彩度版本，用於底線與 hover 底色 */
+  accentSoft: string
+  /** 背景紋理（SVG data URI）。一律灰階、不透明度 ≤ 3%，避免偏移作品白平衡 */
+  texture: string
+  /** 該分類的動效個性 */
+  easing: string
+  /** 卡片圓角 */
+  radius: string
+  /** 卡片外框寬度 */
+  border: string
 }
 
-// 房間配置。position 為邏輯格子座標，由 useMaze 展開為實際格子；
-// connections 是迷宮拓撲的唯一真相（MR-002）。
-//
-// 刻意不含 color：主題色由 crt.css 的 --color-{id} 變數經 .theme-{id} 套用，
-// 資料層再放一份 hex 會變成第二份真相（與 position 同類的問題）。
-export interface RoomConfig {
-  id: RoomType
-  name: string
-  englishName: string
-  icon: string
-  position: Point
-  connections: RoomType[]
-}
-
-// 入口配置：入口只連接起源之廳，不再直連全部房間
-export interface EntranceConfig {
-  position: Point
-  connections: RoomType[]
-}
-
-// 格子種類：房間方塊，或連接房間的走廊
-export type CellKind = 'room' | 'corridor'
-
-// 迷宮中的一個可走格子
-export interface MazeCell {
-  point: Point
-  kind: CellKind
-  nodeId?: NodeId
-}
-
-// 迷霧層級：已訪問全亮 / 鄰接暗輪廓 / 其餘全黑（MR-002）
-export type FogLevel = 'visible' | 'dim' | 'hidden'
-
-// 基本資料
-export interface BasicInfo {
-  name: string
-  title: string
-  tagline: string
-  avatar: string
-}
-
-// 自傳區
-export interface OriginData {
-  background: string
-  values: string[]
-  turningPoints: {
-    title: string
-    description: string
-    year: string
-  }[]
-}
-
-// 工作經歷
-export interface QuestData {
-  company: string
-  position: string
-  period: string
-  difficulty: number // 1-5
-  objectives: string[]
-  achievements: string[]
-  skills: string[]
-}
-
-// 作品集
-export interface TreasureData {
-  name: string
-  type: string
-  rarity: 'common' | 'rare' | 'epic' | 'legendary'
-  role: string
-  technologies: string[]
-  stats: {
-    label: string
-    value: number
-  }[]
-  link?: string
-}
-
-// 技能
-export interface SkillData {
-  category: 'magic' | 'equipment' | 'passive' | 'talent'
-  categoryName: string
-  skills: {
-    name: string
-    level: number // 1-5
-    icon?: string
-  }[]
-}
-
-// 成就
-export interface AchievementData {
-  type: 'badge' | 'trophy' | 'hidden'
-  typeName: string
-  name: string
-  description: string
-  year?: string
-  unlocked: boolean
-}
-
-// 聯絡資訊
-export interface ContactData {
-  type: 'email' | 'linkedin' | 'github' | 'website'
+export interface Category {
+  id: CategoryId
+  /** 顯示名稱 */
   label: string
-  value: string
-  icon: string
+  /** 等寬字代號，用於幾何感標籤 */
+  code: string
+  theme: CategoryTheme
 }
 
-// 完整履歷資料
-export interface ResumeData {
-  basic: BasicInfo
-  origin: OriginData
-  quests: QuestData[]
-  treasures: TreasureData[]
-  skills: SkillData[]
-  achievements: AchievementData[]
-  contacts: ContactData[]
+export interface WorkLink {
+  label: string
+  url: string
 }
 
-// 裝置類型
-export type DeviceType = 'desktop' | 'mobile'
+export interface Work {
+  id: string
+  title: string
+  category: CategoryId
+  /** 媒材標籤，如「壓克力顏料」「麻布」 */
+  media: string[]
+  /** 年份或日期字串 */
+  year: string
+  aspect: AspectId
+  description: string
+  /** 角色／我的貢獻 */
+  role: string
+  links: WorkLink[]
+  /** 詳情頁用的較大圖 */
+  src: string
+  /** 牆面縮圖。與 src 分離，牆面永遠不載原圖 */
+  thumb: string
+  alt: string
+  /** 原始像素尺寸，供 img width/height 防 CLS */
+  width: number
+  height: number
+}
+
+/** 裝置寬度模式：寬螢幕走水平長廊，窄螢幕降級為垂直網格 */
+export type Viewport = 'wide' | 'narrow'

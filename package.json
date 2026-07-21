@@ -10,7 +10,6 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
-    "nes.css": "^2.3.0",
     "vue": "^3.4.21"
   },
   "devDependencies": {
