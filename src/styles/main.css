@@ -1,12 +1,12 @@
-/* 主樣式文件 */
-@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&display=swap');
-/* nes-core = nes.css 去掉像素精靈圖（Mario/Kirby/寶可夢）後的 UI 元件層，288K → 52K。
-   精靈圖對履歷無用途，見 MR-003。配色由 nes-amber.css 覆寫為琥珀單色。 */
-@import 'nes.css/css/nes-core.min.css';
-@import './crt.css';
-@import './nes-amber.css';
+/**
+ * 全站基礎樣式與設計 token。
+ *
+ * 分兩層（MR-008）：
+ *   1. 中性層——背景、字色、線條、間距。永遠不隨分類改變，作品顏色不被外殼干擾。
+ *   2. 分類層——`--accent` / `--ease` / `--card-radius` / `--card-border` / `--texture`，
+ *      由 `useCategoryTheme` 在切換分類時覆寫。初始值等同「全部」的中性主題。
+ */
 
-/* 基礎重置 */
 *,
 *::before,
 *::after {
@@ -15,252 +15,96 @@
   padding: 0;
 }
 
-/* 根元素設定 */
 :root {
-  font-family: 'VT323', monospace;
-  font-size: 18px;
-  line-height: 1.5;
-  color: var(--color-text);
-  background: var(--color-bg);
+  /* 中性層 */
+  --bg: #f7f6f3;
+  --surface: #eceae5;
+  --ink: #1c1c1a;
+  --ink-soft: #55534d;
+  --ink-faint: #8c8981;
+  --line: #dedbd4;
+  --line-strong: #c8c4bb;
 
-  font-synthesis: none;
+  /* 版面尺度 */
+  --page-x: clamp(1rem, 5vw, 4rem);
+  --wall-gap: clamp(1rem, 2.2vw, 2rem);
+  --rail-h: clamp(360px, 62vh, 620px);
+
+  /* 字體：系統字，不打外部請求 */
+  --font-sans: 'Noto Sans TC', 'PingFang TC', 'Hiragino Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* 分類層預設值（＝ ALL_THEME，見 data/categories.ts） */
+  --accent: #1c1c1a;
+  --texture: none;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --card-radius: 2px;
+  --card-border: 1px;
+
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
   text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: none;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body {
+html,
+body {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  transition: background-color 400ms var(--ease);
+}
+
+/* 紋理鋪在獨立的一層：暗色背景時整層反相，黑線才不會消失在暗底裡 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-image: var(--texture);
+  pointer-events: none;
+}
+
+:root[data-scheme='dark'] body::before {
+  filter: invert(1);
 }
 
 #app {
-  width: 100%;
-  height: 100%;
+  min-height: 100vh;
 }
 
-/* 字體類別 */
-.font-terminal {
-  font-family: 'VT323', monospace;
+img {
+  max-width: 100%;
 }
 
-.font-pixel {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.7em;
-  line-height: 1.8;
+button {
+  font: inherit;
+  color: inherit;
 }
 
-/* 文字樣式 */
-.text-primary {
-  color: var(--color-text);
+a {
+  color: inherit;
 }
 
-.text-dim {
-  color: var(--color-text-dim);
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
-.text-accent {
-  color: var(--room-color, var(--color-origin));
-}
-
-/* 選取文字樣式 */
-::selection {
-  background: var(--room-color, var(--color-origin));
-  color: var(--color-bg);
-}
-
-/* 滾動條樣式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-dim);
-}
-
-/* 按鈕樣式 */
-.btn-terminal {
-  font-family: 'VT323', monospace;
-  font-size: 1.2rem;
-  padding: 8px 16px;
-  background: transparent;
-  border: 2px solid var(--room-color, var(--color-text));
-  color: var(--room-color, var(--color-text));
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
-}
-
-.btn-terminal:hover {
-  background: var(--room-color, var(--color-text));
-  color: var(--color-bg);
-  box-shadow: 0 0 10px var(--room-color, var(--color-text));
-}
-
-.btn-terminal:active {
-  transform: scale(0.98);
-}
-
-/* 容器類別 */
-.container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* 終端機文字框 */
-.terminal-box {
-  background: rgba(0, 0, 0, 0.5);
-  border: 2px solid var(--color-border);
-  padding: 20px;
-  position: relative;
-}
-
-.terminal-box::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: 10px;
-  right: 10px;
-  height: 2px;
-  background: var(--room-color, var(--color-origin));
-  box-shadow: 0 0 10px var(--room-color, var(--color-origin));
-}
-
-/* 標題樣式 */
-.title-main {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 1.2rem;
-  color: var(--room-color, var(--color-origin));
-  text-shadow:
-    0 0 5px var(--room-color, var(--color-origin)),
-    0 0 10px var(--room-color, var(--color-origin));
-  margin-bottom: 1rem;
-}
-
-.title-section {
-  font-family: 'VT323', monospace;
-  font-size: 1.5rem;
-  color: var(--room-color, var(--color-text));
-  border-bottom: 1px solid var(--color-border);
-  padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-/* 分隔線 */
-.divider {
-  border: none;
-  border-top: 1px dashed var(--color-border);
-  margin: 1rem 0;
-}
-
-/* 列表樣式 */
-.list-terminal {
-  list-style: none;
-}
-
-.list-terminal li {
-  position: relative;
-  padding-left: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.list-terminal li::before {
-  content: '>';
-  position: absolute;
-  left: 0;
-  color: var(--room-color, var(--color-origin));
-}
-
-/* 星級評分 */
-.star-rating {
-  display: inline-flex;
-  gap: 2px;
-}
-
-.star-rating .star {
-  color: var(--color-text-dim);
-}
-
-.star-rating .star.filled {
-  color: var(--room-color, var(--color-treasure));
-}
-
-/* 標籤樣式 */
-.tag {
-  display: inline-block;
-  font-family: 'VT323', monospace;
-  font-size: 0.9rem;
-  padding: 2px 8px;
-  border: 1px solid var(--room-color, var(--color-text));
-  color: var(--room-color, var(--color-text));
-  margin: 2px;
-}
-
-/* 稀有度顏色 */
-.rarity-common { --room-color: #888888; }
-.rarity-rare { --room-color: #6bcfff; }
-.rarity-epic { --room-color: #c77dff; }
-.rarity-legendary { --room-color: #ffd93d; }
-
-/* 動畫工具類別 */
-.fade-in {
-  animation: fadeIn 0.5s ease forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in-left {
-  animation: slideInLeft 0.5s ease forwards;
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-/* 隱藏工具類別 */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-/* 響應式 */
-@media (max-width: 768px) {
-  :root {
-    font-size: 16px;
-  }
-
-  .container {
-    padding: 10px;
-  }
-
-  .title-main {
-    font-size: 0.9rem;
-  }
-
-  .font-pixel {
-    font-size: 0.6em;
+/* 系統要求減少動態時，關掉所有動畫與轉場（開場動畫則根本不掛載） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
