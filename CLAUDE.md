@@ -7,11 +7,11 @@
 ## 專案概述
 任意創作者的線上作品牆，數位幾何感外殼＋中性襯托作品。
 **技術棧**：Vue 3 + TypeScript + Vite
-**架構**：單一 SPA，無後端。repo root 在 `maze-resume-preview/maze-portfolio/`（外層 `maze-resume-preview/` 僅為包裝資料夾，無檔案）
+**架構**：單一 SPA，無後端。repo root 在根目錄下的 `art-wall/`，與其餘子專案同層
 **部署**：GitHub Pages（來源＝Actions），merge 進 `main` 自動發佈至 <https://aliencat0528.github.io/art-wall/>
 
-> repo 已更名為 `art-wall`（MR-010），但**本機資料夾仍是 `maze-resume-preview/maze-portfolio/`**，
-> 那是 v1 迷宮履歷的殘留。資料夾扁平化牽動根 `prepare.md` 索引，待主線決定。
+> 名稱沿革：v1 為「迷宮履歷」，MR-008 轉為作品牆，MR-010 更名 repo，D-004／MR-011 扁平化本機路徑。
+> 舊路徑 `maze-resume-preview/maze-portfolio/` 已不存在。
 >
 > `vite.config.ts` 的 `base` 必須等於 `/<repo 名稱>/`，改 repo 名稱時要一起改，否則資產全數 404。
 
