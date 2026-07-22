@@ -1,0 +1,65 @@
+# 測試
+
+作品牆是無後端的純前端 SPA，測試分兩層：**邏輯層走單元測試**、**瀏覽器行為走 E2E**。
+兩者的分工不是隨意切的，而是照 `.claude/knowledge/browser-automation-cost.md` 的原則
+——「AI 瀏覽器是發現工具，不是回歸工具；已知該長怎樣的東西固化成真測試」。
+
+## 指令
+
+```bash
+npm run test         # 單元測試（Vitest，單次跑完）
+npm run test:watch   # 單元測試，監看模式
+npm run coverage     # 單元測試 + 覆蓋率報告（coverage/index.html）
+npm run test:e2e     # E2E（Playwright，會自動 build 並起 preview）
+```
+
+E2E 首次執行前要裝瀏覽器：`npx playwright install chromium`。
+
+## 分層與範圍
+
+| 層 | 工具 | 測什麼 | 檔案 |
+|----|------|--------|------|
+| 單元 | Vitest + jsdom | composables 與 utils 的**邏輯**：資料合併、CRUD、篩選、網址狀態、IndexedDB wrapper | `src/**/*.spec.ts` |
+| E2E | Playwright（chromium） | 真實瀏覽器的**流程與持久化**：分類切換、詳情開關、深連結、上傳→reload→圖片還在 | `e2e/*.spec.js` |
+
+**為什麼有些東西只在 E2E 測**：
+
+- **圖片處理（`utils/image.ts`）** 走 canvas，jsdom 沒有實作，只有真實瀏覽器測得到。
+  上傳流程在 `e2e/editor.spec.js` 驗。
+- **IndexedDB 存 Blob 的完整往返**：單元測試用 `fake-indexeddb`，但它的 structured clone
+  不認得 jsdom 的 Blob（存進去讀回來變空物件）。所以 `idb.spec.ts` 只用 `Uint8Array`
+  驗 wrapper 的 key/覆寫/刪除邏輯，真正的 Blob 往返交給 E2E 的「reload 後圖片還在」。
+
+**單元測試目前不涵蓋**（有意）：`useAppearance` / `useMediaQuery` / `useSettings`
+偏 DOM 與媒體查詢，行為由 E2E 的整頁流程間接覆蓋；`useLibrary.replaceImage`（換圖）
+尚無專測，是已知缺口。
+
+## 測試流程報告（四段式）
+
+> 格式定義見規則層 `.claude/specs/testing.md`，此處為本專案的具體填法。
+
+1. **環境準備 (Setup)**：`npm ci`；E2E 另需 `npx playwright install chromium`。
+   本機 Node 18，CI Node 20。
+2. **執行步驟 (Execution)**：`npm run lint && npm run test && npm run build && npm run test:e2e`。
+3. **預期結果 (Expected)**：lint 零警告；單元 34 tests 全過；build 產出 `dist/`；E2E 14 tests 全過。
+4. **驗證方式 (Verification)**：`npm run coverage` 看 composables/utils 覆蓋率；
+   E2E 失敗時看 `playwright-report/`（CI 會上傳成 artifact）。
+
+## 版本鎖（重要）
+
+本機 Node 為 **18.12**，以下都因此釘在能相容 Node 18 的版本，升 Node 20 之前**不要升**：
+
+| 套件 | 釘的版本 | 原因 |
+|------|---------|------|
+| `vitest` / `@vitest/coverage-v8` | `~3.2` | 4.x 要求 Node `^20 \|\| ^22 \|\| >=24` |
+| jsdom（而非 happy-dom） | — | happy-dom 修掉 VM context escape（GHSA-37j7-fg3j-429f）的版本要 Node ≥20 |
+| Playwright 設定與 E2E 測試檔 | 用 `.js` 不用 `.ts` | Node 18 + `"type":"module"` 下 Playwright 的 TS loader 不生效（需 Node 20 的 `module.register`） |
+
+詳見 `prepare.md` 的 MR-013。這串限制與 ESLint 釘在 v9（MR-003）同源——
+升 Node 20 可一次解掉，但那是另一個決策。
+
+## CI
+
+- **`.github/workflows/ci.yml`**（PR 觸發）：lint → 單元 → build → E2E，完整門檻。
+- **`.github/workflows/deploy.yml`**（push main 觸發）：lint → 單元 → build → 發佈 GitHub Pages。
+  E2E 不進部署路徑，避免每次發佈都下載瀏覽器；PR 已擋過一輪。

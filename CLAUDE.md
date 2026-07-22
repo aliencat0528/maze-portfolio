@@ -40,12 +40,17 @@ npm run dev        # 開發伺服器
 npm run build      # vue-tsc -b && vite build（含型別檢查）
 npm run preview    # 預覽 production build
 npm run lint       # ESLint（--max-warnings 0）
+npm run test       # 單元測試（Vitest，composables / utils）
+npm run coverage   # 單元測試 + 覆蓋率
+npm run test:e2e   # E2E（Playwright，自動 build + preview；首次需 npx playwright install chromium）
 ```
 
-**Commit 前必做**：`npm run lint` + `npm run build` 皆須通過。
+**Commit 前必做**：`npm run lint` + `npm run test` + `npm run build` 皆須通過。
+測試分層與範圍見 `docs/TESTING.md`。
 
-> ESLint 釘在 v9：本機 Node 為 v18，ESLint 10 要求 Node ^20.19 以上，實測會拋
-> `util.styleText is not a function`。升 Node 之前不要升 ESLint（見 MR-003）。
+> **Node 18 版本鎖（升 Node 20 前都不要動）**：本機 Node 為 v18。
+> - ESLint 釘 v9——v10 要 Node ^20.19，實測拋 `util.styleText is not a function`（MR-003）
+> - Vitest 釘 `~3.2`、用 jsdom 不用 happy-dom、Playwright 設定與 E2E 用 `.js` 不用 `.ts`（MR-013）
 
 ---
 
@@ -63,3 +68,4 @@ npm run lint       # ESLint（--max-warnings 0）
 | 觸發詞 | 檢查其他文件 |
 |--------|-------------|
 | `deploy`, `部署`, `base`, `Pages`, `workflow` | `docs/DEPLOYMENT.md` |
+| `test`, `測試`, `vitest`, `playwright`, `e2e`, `coverage` | `docs/TESTING.md` |

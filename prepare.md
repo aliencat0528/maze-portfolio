@@ -1,6 +1,6 @@
 # Art Wall — 決策記錄
 
-> **版本**：MR-012 · 2026-07-22
+> **版本**：MR-013 · 2026-07-23
 > **記錄規則繼承根目錄 `prepare.md`**，此處只記差異。
 
 ---
@@ -37,6 +37,20 @@
 ---
 
 ## 決策日誌（最近 10 筆，新的在上）
+
+### MR-013 · 2026-07-23 · test
+- **決策**：導入兩層測試——Vitest + jsdom 測 composables／utils 邏輯，
+  Playwright（僅 chromium）測瀏覽器流程與持久化。指令 `test`／`test:watch`／`coverage`／`test:e2e`。
+  單元擋在 commit／deploy 前，E2E 走 PR 專屬 `ci.yml`
+- **理由**：落地 `browser-automation-cost.md` 的「回歸用真測試、AI 瀏覽器只做發現」；
+  canvas 圖片處理與 Blob 往 IndexedDB 的完整往返只有真實瀏覽器測得到，故必須有 E2E 這層
+- **版本鎖（Node 18 限制，同 MR-003 源）**：`vitest` 釘 `~3.2`（4.x 要 Node ≥20）；
+  用 jsdom 不用 happy-dom（其修 VM escape 的版本要 Node ≥20）；Playwright 設定與 E2E 測試檔
+  用 `.js` 不用 `.ts`（Node 18 + ESM 下 Playwright 的 TS loader 不生效）
+- **落地細節**：`fake-indexeddb` 的 structured clone 不認 jsdom Blob，故 `idb.spec.ts` 只驗
+  wrapper 邏輯（Uint8Array），Blob 保真度交給 E2E。34 單元 + 14 E2E 全綠。詳見 `docs/TESTING.md`
+- **未涵蓋**：`useLibrary.replaceImage`（換圖）無專測；`useAppearance`／`useMediaQuery`／`useSettings`
+  由 E2E 間接覆蓋。升 Node 20 可一次解掉所有版本鎖，屬另一決策
 
 ### MR-012 · 2026-07-22 · data
 - **決策**：Phase E 資料模型定案，四點——

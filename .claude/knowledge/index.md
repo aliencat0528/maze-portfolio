@@ -20,5 +20,6 @@
 
 - 需要架構全貌（資料層／持久層／狀態層／視圖層、兩層主題系統） → `@../../docs/ARCHITECTURE.md`
 - 需要部署與 `vite base` 脈絡 → `@../../docs/DEPLOYMENT.md`
+- 需要測試分層、範圍與版本鎖 → `@../../docs/TESTING.md`
 - 需要決策脈絡（為什麼這樣改） → `@../../prepare.md`
 - 需要 scopes、開發指令、文件觸發詞 → `@../../CLAUDE.md`

@@ -88,14 +88,16 @@ src/
 ## 測試
 
 ```bash
-npm run lint    # ESLint --max-warnings 0
-npm run build   # vue-tsc 型別檢查 + vite build
+npm run lint     # ESLint --max-warnings 0
+npm run test     # 單元測試（Vitest：composables / utils）
+npm run build    # vue-tsc 型別檢查 + vite build
+npm run test:e2e # E2E（Playwright，僅 chromium）
 ```
 
-**Commit 前必做**：兩者皆須通過。
+**Commit 前必做**：`lint` + `test` + `build` 皆須通過。分層與範圍見 [`docs/TESTING.md`](docs/TESTING.md)。
 
-> ESLint 釘在 v9：ESLint 10 要求 Node ^20.19 以上，在 Node 18 會拋
-> `util.styleText is not a function`。
+> **Node 18 版本鎖**：ESLint 釘 v9、Vitest 釘 ~3.2、用 jsdom、Playwright 設定與 E2E 用 `.js`
+> ——三者都因本機 Node 18 而定，升 Node 20 前不要動（見 `prepare.md` MR-003 / MR-013）。
 
 ## 技術棧
 
@@ -104,6 +106,7 @@ npm run build   # vue-tsc 型別檢查 + vite build
 - **樣式**：CSS Variables，無 UI 框架、無動畫函式庫
 - **儲存**：localStorage（文字與設定）+ IndexedDB（圖片 blob）
 - **檢查**：ESLint 9 + typescript-eslint + eslint-plugin-vue
+- **測試**：Vitest + jsdom（單元）、Playwright（E2E）
 
 ## 版本歷史
 
