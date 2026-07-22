@@ -1,9 +1,9 @@
 ---
-description: Maze Portfolio 核心規範：專案概述、開發指令、全域語言/風格/安全規則
+description: Art Wall 核心規範：專案概述、開發指令、全域語言/風格/安全規則
 alwaysApply: true
 ---
 
-# Maze Portfolio（核心規範）
+# Art Wall（核心規範）
 
 > 本專案已有專屬 `CLAUDE.md`（scopes、開發指令、文件觸發詞），以及決策記錄 `prepare.md`。
 > 本 repo 為獨立 git repo，Cursor 單開時讀不到父層規則，故此處內嵌全域核心。
@@ -12,20 +12,26 @@ alwaysApply: true
 
 ## 專案概述
 
-迷宮主題的作品集 / 履歷預覽應用
+任意創作者的線上作品牆，數位幾何感外殼＋中性襯托作品
 - **技術棧**：Vue 3 + TypeScript + Vite
-- **類型**：單頁作品集應用
+- **類型**：單一 SPA，無後端（持久層為 localStorage + IndexedDB）
 
 ```
-maze-portfolio/
+art-wall/
 ├── index.html         # 主要 HTML 入口
 ├── src/
 │   ├── components/    # Vue 組件
-│   └── *.vue          # Vue 檔案
+│   ├── composables/   # 狀態層
+│   ├── data/          # 作品、分類主題、背景主題
+│   ├── types/         # 型別定義
+│   ├── utils/         # IndexedDB、圖片處理
+│   └── styles/        # 全站 token 與基礎樣式
 ├── public/            # 靜態資源
 ├── docs/              # 文件
 └── dist/              # 建置輸出
 ```
+
+> 名稱沿革：v1 為「迷宮履歷」，MR-008 轉為作品牆，MR-010 更名 repo。迷宮實作已於改寫時全數移除。
 
 ## 開發指令
 
