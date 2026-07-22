@@ -1,6 +1,6 @@
 # Maze Portfolio — 決策記錄
 
-> **版本**：MR-010 · 2026-07-22
+> **版本**：MR-012 · 2026-07-22
 > **記錄規則繼承根目錄 `prepare.md`**，此處只記差異。
 
 ---
@@ -19,6 +19,12 @@
   - **Phase 3**：房間互動升級 + 真實資料 + deploy
   - **未排程**：待討論事項 #1（個人化內容編輯）
   - **→ D-003 轉向**：改採作品牆 Phase A/B/C（見 MR-007）；舊 Phase 2/3 之密室與房間互動併入 Phase B/C 待重估
+  - **→ 2026-07-22 重排**：Phase A 已完成（MR-008／MR-009）。其後改為
+    - **Phase D**：部署上線（MR-010，已完成）
+    - **Phase E**：資料模型一次改完＝分類可編輯＋策展層（MR-012）
+    - **Phase F**：視覺互動＝長廊景深＋詳情頁 pan/zoom（純視圖層，不動資料）
+    - **Phase G**：展場漫步彩蛋（原 Phase B，須待 E／F 穩定）
+    - 合併 E 的理由：兩者都動 `types`／`useLibrary`／`EditorPanel`，分兩次做等於改兩遍
 
 ---
 
@@ -31,6 +37,32 @@
 ---
 
 ## 決策日誌（最近 10 筆，新的在上）
+
+### MR-012 · 2026-07-22 · data
+- **決策**：Phase E 資料模型定案，四點——
+  ①**展覽與分類正交**：分類＝媒材（無序篩選、帶主題），展覽＝策展（有序動線＋前言），作品兩者都有；
+  ②**持久層收成單一 document** `artwall.library.v2`（works／categories／exhibitions／overrides／hidden），
+  帶 `schemaVersion`，匯出 JSON 即該 document 本身，需寫 v1→v2 遷移；
+  ③**分類個性綁在紋理上**：使用者只選名稱／顏色／紋理，`easing`／`radius`／`border` 隨紋理成組帶入，
+  `accentDark` 由 accent 以 HSL 提亮自動推導並驗對比度；
+  ④**展覽入口為站頭第二排**「依媒材／依展覽」模式切換，不新增頁面層級
+- **理由**：分類是無序篩選、展覽是有序動線，資料結構本就不同，合併會逼出「展覽也有紋理嗎」這種答不出的問題；
+  MR-010 後匯出檔＝正式發佈管道，儲存與匯出格式不一致就是多一層轉換與 bug 溫床，且無 `schemaVersion`
+  會讓舊匯出檔在改版後**靜默讀壞**；動效曲線不能暴露 `cubic-bezier` 給非工程師填
+- **棄選**：展覽為主軸（推翻 MR-008 已上線的分類主題，且無展覽者首頁全空）；統一成 collection（概念混淆）；
+  新分類給固定中性預設（會明顯比內建六類沒個性）；維持多 key 分散（`useLibrary` 已 254 行，只會更腫）
+- **影響**：`CategoryId` union → `string`，**編譯期保證消失**——`CATEGORY_MAP[work.category]` 現有 5 處
+  直接索引（`WorkCard:17`／`WorkDetail:19`／`works.ts:27,38`／`useAppearance:17`）必須補 fallback。
+  刪分類已決定「有作品就擋下」，但**匯入 JSON 仍會帶進孤兒分類**，故防禦不可省。
+  `EditorPanel`（610 行）拆為分頁式（作品／分類／展覽／站台），屬 E 的成本非額外加碼
+- **錨點**：待 Phase E PR
+
+### MR-011 · 2026-07-22 · docs
+- **決策（落地）**：本專案本機路徑扁平化為根目錄下的 `art-wall/`，`CLAUDE.md` 的 repo root 敘述同步
+- ← D-004
+- **落地細節**：外層包裝資料夾 `maze-resume-preview/` 移除；實體搬移須在 Claude Code session 外執行，
+  因該資料夾即 session 工作目錄，搬移後需重開。外層 `.gitignore` 過渡期兩條並存，搬移後刪除舊行
+- **錨點**：外層 PR #16
 
 ### MR-010 · 2026-07-22 · deploy
 - **決策**：上 GitHub Pages，來源為 Actions（非 `gh-pages` 分支），push `main` 觸發；
