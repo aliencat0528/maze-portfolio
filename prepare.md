@@ -1,6 +1,6 @@
 # Maze Portfolio — 決策記錄
 
-> **版本**：MR-009 · 2026-07-21
+> **版本**：MR-010 · 2026-07-22
 > **記錄規則繼承根目錄 `prepare.md`**，此處只記差異。
 
 ---
@@ -26,11 +26,24 @@
 
 | # | 議題 | 卡在什麼 | 提出日期 |
 |---|------|---------|---------|
-| 1 | 編輯結果如何對外生效 | MR-009 已決本機層（localStorage／IndexedDB＋匯出 JSON）；「上傳完直接對外可見」需後端或 GitHub API 寫回，等真作品資料到位再評估 | 2026-07-21 |
+| 1 | 是否要做「零手動」發佈 | MR-010 已給出手動路徑（匯出 JSON → 寫進 `data/works.ts` → PR → 自動部署），可用但每次都要進開發流程。要做到「上傳完就對外可見」需後端或 GitHub API 寫回＋token，等真作品資料到位再評估 | 2026-07-21（MR-010 收斂） |
 
 ---
 
 ## 決策日誌（最近 10 筆，新的在上）
+
+### MR-010 · 2026-07-22 · deploy
+- **決策**：上 GitHub Pages，來源為 Actions（非 `gh-pages` 分支），push `main` 觸發；
+  workflow 內含 lint 與型別檢查，沒過就不部署。repo 更名 `maze-portfolio` → `art-wall`，
+  `vite base` 設 `/art-wall/`。**本機資料夾維持不動**
+- **理由**：網址直接吃 repo 名，`maze-portfolio` 與已轉向的內容不符（MR-008）；
+  Actions 來源不必把 `dist` 進版控，`gh-pages` 分支則會；CI 擋一次 lint／型別，
+  是唯一擋得住「本機忘了跑」的地方。query string 帶狀態故不需 SPA 404 fallback
+- **棄選**：`gh-pages` 分支（`dist` 進版控，與 `.gitignore` 打架）；維持舊 repo 名（網址說謊）；
+  同時扁平化本機資料夾（牽動根 `prepare.md` 索引與 `.gitignore`，屬主線範圍，不夾帶）
+- **影響**：解掉待討論事項 #1 的「對外生效」——路徑為匯出 JSON → 寫進 `data/works.ts` → PR → 自動部署。
+  這不是後端，編輯面板「只存這台瀏覽器」的限制不變
+- **錨點**：PR #5
 
 ### MR-009 · 2026-07-21 · data
 - **決策**：瀏覽器內編輯只做**本機層**——圖片存 IndexedDB、文字與站台設定存 localStorage，

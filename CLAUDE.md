@@ -8,8 +8,12 @@
 任意創作者的線上作品牆，數位幾何感外殼＋中性襯托作品。
 **技術棧**：Vue 3 + TypeScript + Vite
 **架構**：單一 SPA，無後端。repo root 在 `maze-resume-preview/maze-portfolio/`（外層 `maze-resume-preview/` 僅為包裝資料夾，無檔案）
+**部署**：GitHub Pages（來源＝Actions），merge 進 `main` 自動發佈至 <https://aliencat0528.github.io/art-wall/>
 
-> 資料夾與 repo 名稱仍是 `maze-portfolio`，那是 v1 迷宮履歷的殘留（見 prepare.md MR-008）。
+> repo 已更名為 `art-wall`（MR-010），但**本機資料夾仍是 `maze-resume-preview/maze-portfolio/`**，
+> 那是 v1 迷宮履歷的殘留。資料夾扁平化牽動根 `prepare.md` 索引，待主線決定。
+>
+> `vite.config.ts` 的 `base` 必須等於 `/<repo 名稱>/`，改 repo 名稱時要一起改，否則資產全數 404。
 
 ---
 
@@ -24,6 +28,7 @@
 | `store` | 持久層與資料合併（`composables/useLibrary`, `useSettings`, `utils/idb`） |
 | `styles` | 全站 token 與基礎樣式（`styles/`） |
 | `types` | 型別定義（`types/`） |
+| `deploy` | 建置與部署設定（`vite.config.ts` 的 `base`、`.github/workflows/`） |
 | `docs` | 文件 |
 
 ---
@@ -54,3 +59,7 @@ npm run lint       # ESLint（--max-warnings 0）
 | `upload`, `上傳`, `儲存`, `IndexedDB` | 持久層、資料流（寫入） |
 | `theme`, `主題`, `accent`, `背景` | 兩層主題系統 |
 | `type`, `interface`, `型別` | 模組職責 |
+
+| 觸發詞 | 檢查其他文件 |
+|--------|-------------|
+| `deploy`, `部署`, `base`, `Pages`, `workflow` | `docs/DEPLOYMENT.md` |
