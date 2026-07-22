@@ -1,9 +1,11 @@
 給任意創作者用的線上作品牆：資料驅動、可切分類、可在瀏覽器內編輯與上傳。
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 # Art Wall - 作品牆
+
+線上展場：<https://aliencat0528.github.io/art-wall/>
 
 ## 功能特色
 
@@ -21,10 +23,12 @@
 ```bash
 npm install
 npm run dev
-# 預期：VITE v5 ready，開 http://localhost:5173/
+# 預期：VITE v5 ready，開 http://localhost:5173/art-wall/
 ```
 
-想重看開場動畫：`http://localhost:5173/?intro=1`
+網址帶 `/art-wall/` 是因為站台部署在 GitHub Pages 的專案頁下，`base` 設為同一個值。
+
+想重看開場動畫：`http://localhost:5173/art-wall/?intro=1`
 
 ## 使用方式
 
@@ -56,8 +60,9 @@ npm run dev
 與詳情用圖（1800px），並依實際比例帶入版位。
 
 > **限制**：編輯只存在該瀏覽器（localStorage 與 IndexedDB），**沒有後端**。
-> 訪客看到的仍是 `src/data/works.ts` 的內容。要讓改動成為正式版本，
-> 請用面板的「匯出 JSON」把資料帶進開發流程。
+> 訪客看到的仍是 `src/data/works.ts` 的內容。要讓改動對外生效：
+> 匯出 JSON → 寫進 `src/data/works.ts` → PR merge 進 `main` → 自動重新部署。
+> 完整步驟見 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md#3-發佈內容變更)。
 
 ## 專案結構
 
@@ -72,6 +77,13 @@ src/
 ```
 
 模組職責、資料流與兩層主題系統見 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
+
+## 部署
+
+部署在 GitHub Pages，來源為 GitHub Actions。**PR merge 進 `main` 即自動發佈**，
+`.github/workflows/deploy.yml` 會先跑 lint 與型別檢查，沒過就不部署。
+
+一次性設定、發佈內容變更的完整步驟與故障排除見 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)。
 
 ## 測試
 
@@ -94,6 +106,12 @@ npm run build   # vue-tsc 型別檢查 + vite build
 - **檢查**：ESLint 9 + typescript-eslint + eslint-plugin-vue
 
 ## 版本歷史
+
+### v2.1.0 (2026-07-22)
+
+- **上線 GitHub Pages** — Actions workflow 自動建置與部署，lint 與型別檢查沒過就不發佈（MR-010）
+- **repo 更名為 `art-wall`** — 網址從 `maze-portfolio` 改為 `art-wall`，`vite base` 同步調整
+- **新增** `docs/DEPLOYMENT.md`，含發佈內容變更的完整路徑
 
 ### v2.0.0 (2026-07-21)
 
