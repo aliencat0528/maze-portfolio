@@ -32,6 +32,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run test
+
       # build 內含 vue-tsc 型別檢查
       - run: npm run build
 
