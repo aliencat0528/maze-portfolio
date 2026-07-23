@@ -65,8 +65,8 @@
   會讓舊匯出檔在改版後**靜默讀壞**；動效曲線不能暴露 `cubic-bezier` 給非工程師填
 - **棄選**：展覽為主軸（推翻 MR-008 已上線的分類主題，且無展覽者首頁全空）；統一成 collection（概念混淆）；
   新分類給固定中性預設（會明顯比內建六類沒個性）；維持多 key 分散（`useLibrary` 已 254 行，只會更腫）
-- **影響**：`CategoryId` union → `string`，**編譯期保證消失**——`CATEGORY_MAP[work.category]` 現有 5 處
-  直接索引（`WorkCard:17`／`WorkDetail:19`／`works.ts:27,38`／`useAppearance:17`）必須補 fallback。
+- **影響**：`CategoryId` union → `string`，**編譯期保證消失**——`CATEGORY_MAP[work.category]` 現有 6 處
+  直接索引（`WorkCard:17`／`WorkDetail:19`／`EditorPanel:322`／`works.ts:27,38`／`useAppearance:17`）必須補 fallback。
   刪分類已決定「有作品就擋下」，但**匯入 JSON 仍會帶進孤兒分類**，故防禦不可省。
   `EditorPanel`（610 行）拆為分頁式（作品／分類／展覽／站台），屬 E 的成本非額外加碼
 - **錨點**：待 Phase E PR
