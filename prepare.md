@@ -21,7 +21,7 @@
   - **→ D-003 轉向**：改採作品牆 Phase A/B/C（見 MR-007）；舊 Phase 2/3 之密室與房間互動併入 Phase B/C 待重估
   - **→ 2026-07-22 重排**：Phase A 已完成（MR-008／MR-009）。其後改為
     - **Phase D**：部署上線（MR-010，已完成）
-    - **Phase E**：資料模型一次改完＝分類可編輯＋策展層（MR-012）
+    - **Phase E**：資料模型一次改完＝分類可編輯＋策展層（MR-012，已完成，PR #10–#12）
     - **Phase F**：視覺互動＝長廊景深＋詳情頁 pan/zoom（純視圖層，不動資料）
     - **Phase G**：展場漫步彩蛋（原 Phase B，須待 E／F 穩定）
     - 合併 E 的理由：兩者都動 `types`／`useLibrary`／`EditorPanel`，分兩次做等於改兩遍
@@ -69,7 +69,13 @@
   直接索引（`WorkCard:17`／`WorkDetail:19`／`EditorPanel:322`／`works.ts:27,38`／`useAppearance:17`）必須補 fallback。
   刪分類已決定「有作品就擋下」，但**匯入 JSON 仍會帶進孤兒分類**，故防禦不可省。
   `EditorPanel`（610 行）拆為分頁式（作品／分類／展覽／站台），屬 E 的成本非額外加碼
-- **錨點**：待 Phase E PR
+- **落地**：拆三顆疊層 PR——①資料地基（#10：`CategoryId`→`string`、單一 document
+  `artwall.library.v2`、v1→v2 遷移不刪舊 key、6 處 `categoryOf` fallback）；②分類可編輯 UI
+  （#11：`EditorPanel` 610 行拆分頁 + `CategoriesTab`，accentDark 自動推導並驗暗底對比）；
+  ③展覽策展層（#12：`useGallery` 展覽模式與 `?m=ex` URL、站頭「依媒材／依展覽」、`ExhibitionsTab`）。
+  **按風險分階非按功能**：最易靜默讀壞資料的遷移單獨一顆，資料模型仍「一次改完」全在 #10。
+  單元 34→57、E2E 14→18。無展覽時主頁面維持原樣（有 E2E 守）
+- **錨點**：PR #10 → #11 → #12（依序 merge）
 
 ### MR-011 · 2026-07-22 · docs
 - **決策（落地）**：本專案本機路徑扁平化為根目錄下的 `art-wall/`，`CLAUDE.md` 的 repo root 敘述同步
