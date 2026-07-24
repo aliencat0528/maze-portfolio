@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { Work } from '@/types'
-import { CATEGORY_MAP } from '@/data/categories'
+import { categoryOf } from '@/data/categories'
+import { useLibrary } from '@/composables/useLibrary'
 
 /**
  * 作品詳情。
@@ -16,7 +17,8 @@ const emit = defineEmits<{ close: []; step: [delta: number] }>()
 const panel = ref<HTMLElement | null>(null)
 const closeButton = ref<HTMLButtonElement | null>(null)
 
-const category = computed(() => CATEGORY_MAP[props.work.category])
+const { categories } = useLibrary()
+const category = computed(() => categoryOf(props.work.category, categories.value))
 
 function focusableItems(): HTMLElement[] {
   if (!panel.value) return []

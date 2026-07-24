@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 import type { FilterId, Work } from '@/types'
-import { CATEGORIES } from '@/data/categories'
 import { useLibrary } from '@/composables/useLibrary'
 
 /**
@@ -10,12 +9,10 @@ import { useLibrary } from '@/composables/useLibrary'
  * 且開啟詳情頁走 pushState，瀏覽器上一頁＝關閉詳情，符合直覺。
  */
 
-const VALID_CATEGORIES = new Set<string>(CATEGORIES.map((category) => category.id))
-
 const activeCategory = ref<FilterId>('all')
 const selectedId = ref<string | null>(null)
 
-const { allWorks } = useLibrary()
+const { allWorks, categories } = useLibrary()
 
 const filteredWorks = computed<Work[]>(() =>
   activeCategory.value === 'all'
@@ -44,7 +41,9 @@ function buildUrl(): string {
 function readUrl(): void {
   const params = new URLSearchParams(window.location.search)
   const category = params.get('c')
-  activeCategory.value = category && VALID_CATEGORIES.has(category) ? (category as FilterId) : 'all'
+  // 分類已可自訂，改以合併清單即時驗證，而非寫死的集合
+  const known = !!category && categories.value.some((item) => item.id === category)
+  activeCategory.value = known ? (category as FilterId) : 'all'
   selectedId.value = params.get('w')
 }
 
@@ -78,7 +77,7 @@ export function useGallery() {
   }
 
   return {
-    categories: CATEGORIES,
+    categories,
     activeCategory,
     filteredWorks,
     selectedWork,

@@ -1,25 +1,38 @@
 import { computed, ref } from 'vue'
-import type { Work } from '@/types'
+import type {
+  Category,
+  CategoryId,
+  Exhibition,
+  LibraryDocument,
+  StoredCategory,
+  StoredWork,
+  Work,
+} from '@/types'
 import { WORKS } from '@/data/works'
+import { CATEGORIES, resolveCategory } from '@/data/categories'
 import { deleteImage, getImage, putImage } from '@/utils/idb'
 import { blobToDataUrl, dataUrlToBlob, processImage } from '@/utils/image'
 
 /**
  * 作品資料層：內建範例 + 使用者在瀏覽器內的編輯結果。
  *
- * 資料放哪（MR-009）：圖片走 IndexedDB，文字與設定走 localStorage，**沒有後端**。
- * 因此編輯只存在這台瀏覽器——要讓訪客看到，必須用「匯出 JSON」把資料帶走、
- * 放進 repo 的 `data/works.ts` 或之後接上的後端。介面上會把這件事講明白。
+ * 資料放哪（MR-009／MR-012 ②）：圖片走 IndexedDB，其餘（自訂作品、分類、展覽、
+ * 覆寫、隱藏）收成單一 localStorage document `artwall.library.v2`。**沒有後端**，
+ * 編輯只存在這台瀏覽器——要讓訪客看到，得用「匯出 JSON」把整個 document 帶走。
+ *
+ * 遷移：舊版散在 works.v1／overrides.v1／hidden.v1 三個 key，開站時若尚無 v2
+ * document 就自動組出並寫入，且**不刪舊 key**（留作回滾，只在 v2 缺席時執行 → idempotent）。
  */
 
-const CUSTOM_KEY = 'artwall.works.v1'
-const OVERRIDE_KEY = 'artwall.overrides.v1'
-const HIDDEN_KEY = 'artwall.hidden.v1'
-
-/** 存進 localStorage 的自訂作品：不含 blob URL，那是每次開站重新產生的 */
-type StoredWork = Omit<Work, 'src' | 'thumb'> & { imageKey: string }
+const LIBRARY_KEY = 'artwall.library.v2'
+// 舊 key，只在遷移時讀取
+const WORKS_KEY_V1 = 'artwall.works.v1'
+const OVERRIDE_KEY_V1 = 'artwall.overrides.v1'
+const HIDDEN_KEY_V1 = 'artwall.hidden.v1'
 
 const customWorks = ref<Work[]>([])
+const customCategories = ref<StoredCategory[]>([])
+const exhibitions = ref<Exhibition[]>([])
 const overrides = ref<Record<string, Partial<Work>>>({})
 const hidden = ref<string[]>([])
 const ready = ref(false)
@@ -52,8 +65,49 @@ function stripImageUrls(work: Work): StoredWork {
   return rest as StoredWork
 }
 
-function persistCustom(): void {
-  writeJson(CUSTOM_KEY, customWorks.value.map(stripImageUrls))
+/** 把記憶體狀態組回 document 形狀 */
+function toDocument(): LibraryDocument {
+  return {
+    schemaVersion: 2,
+    works: customWorks.value.map(stripImageUrls),
+    categories: customCategories.value,
+    exhibitions: exhibitions.value,
+    overrides: overrides.value,
+    hidden: hidden.value,
+  }
+}
+
+function persist(): void {
+  writeJson(LIBRARY_KEY, toDocument())
+}
+
+/**
+ * 讀取持久層 document：已有 v2 就用；沒有但存在舊 v1 key 就遷移並寫回 v2。
+ * 遷移不刪 v1（回滾用）。手改壞的 document 以預設值補齊各欄位，避免 undefined。
+ */
+function loadDocument(): LibraryDocument {
+  const existing = readJson<Partial<LibraryDocument> | null>(LIBRARY_KEY, null)
+  if (existing && existing.schemaVersion === 2) {
+    return {
+      schemaVersion: 2,
+      works: existing.works ?? [],
+      categories: existing.categories ?? [],
+      exhibitions: existing.exhibitions ?? [],
+      overrides: existing.overrides ?? {},
+      hidden: existing.hidden ?? [],
+    }
+  }
+
+  const migrated: LibraryDocument = {
+    schemaVersion: 2,
+    works: readJson<StoredWork[]>(WORKS_KEY_V1, []),
+    categories: [],
+    exhibitions: [],
+    overrides: readJson<Record<string, Partial<Work>>>(OVERRIDE_KEY_V1, {}),
+    hidden: readJson<string[]>(HIDDEN_KEY_V1, []),
+  }
+  writeJson(LIBRARY_KEY, migrated)
+  return migrated
 }
 
 async function urlFor(key: string): Promise<string> {
@@ -77,20 +131,24 @@ function revoke(imageKey: string): void {
   }
 }
 
-/** 開站時把 IndexedDB 的圖片接回作品資料 */
+/** 把 StoredWork 接回圖片 URL 成完整 Work */
+async function hydrate(work: StoredWork): Promise<Work> {
+  return {
+    ...work,
+    thumb: await urlFor(`${work.imageKey}-thumb`),
+    src: await urlFor(`${work.imageKey}-view`),
+  }
+}
+
+/** 開站時把持久層 document 讀進來、圖片接回作品資料 */
 async function init(): Promise<void> {
   if (ready.value) return
-  overrides.value = readJson(OVERRIDE_KEY, {})
-  hidden.value = readJson(HIDDEN_KEY, [])
-
-  const stored = readJson<StoredWork[]>(CUSTOM_KEY, [])
-  customWorks.value = await Promise.all(
-    stored.map(async (work) => ({
-      ...work,
-      thumb: await urlFor(`${work.imageKey}-thumb`),
-      src: await urlFor(`${work.imageKey}-view`),
-    })),
-  )
+  const doc = loadDocument()
+  overrides.value = doc.overrides
+  hidden.value = doc.hidden
+  customCategories.value = doc.categories
+  exhibitions.value = doc.exhibitions
+  customWorks.value = await Promise.all(doc.works.map(hydrate))
   ready.value = true
 }
 
@@ -101,6 +159,12 @@ const allWorks = computed<Work[]>(() => [
     ...work,
     ...overrides.value[work.id],
   })),
+])
+
+/** 內建 + 自訂分類的合併清單，供篩選列、表單、外觀層使用 */
+const categories = computed<Category[]>(() => [
+  ...CATEGORIES,
+  ...customCategories.value.map(resolveCategory),
 ])
 
 export type WorkDraft = Omit<Work, 'src' | 'thumb' | 'width' | 'height' | 'alt' | 'id'>
@@ -132,7 +196,7 @@ export function useLibrary() {
       },
       ...customWorks.value,
     ]
-    persistCustom()
+    persist()
     return id
   }
 
@@ -143,11 +207,11 @@ export function useLibrary() {
       const next = [...customWorks.value]
       next[index] = { ...next[index], ...patch }
       customWorks.value = next
-      persistCustom()
+      persist()
       return
     }
     overrides.value = { ...overrides.value, [id]: { ...overrides.value[id], ...patch } }
-    writeJson(OVERRIDE_KEY, overrides.value)
+    persist()
   }
 
   /** 換掉自訂作品的圖片 */
@@ -180,22 +244,63 @@ export function useLibrary() {
         deleteImage(`${work.imageKey}-view`),
       ])
       customWorks.value = customWorks.value.filter((item) => item.id !== id)
-      persistCustom()
+      persist()
       return
     }
     hidden.value = [...hidden.value, id]
-    writeJson(HIDDEN_KEY, hidden.value)
+    persist()
   }
 
-  /** 還原所有對內建作品的改動（自訂作品不受影響） */
+  /** 還原所有對內建作品的改動（自訂作品與分類、展覽不受影響） */
   function restorePresets(): void {
     overrides.value = {}
     hidden.value = []
-    writeJson(OVERRIDE_KEY, {})
-    writeJson(HIDDEN_KEY, [])
+    persist()
   }
 
-  /** 匯出整份資料（含圖片 base64），這是把編輯結果帶離這台瀏覽器的唯一途徑 */
+  /** 新增自訂分類 */
+  function addCategory(category: StoredCategory): void {
+    customCategories.value = [...customCategories.value, category]
+    persist()
+  }
+
+  /** 更新自訂分類欄位 */
+  function updateCategory(id: CategoryId, patch: Partial<StoredCategory>): void {
+    customCategories.value = customCategories.value.map((category) =>
+      category.id === id ? { ...category, ...patch } : category,
+    )
+    persist()
+  }
+
+  /**
+   * 刪除自訂分類。有作品引用就擋下（MR-012 ④）——回傳 false 讓 UI 提示，
+   * 而非讓作品變成孤兒。內建分類不可刪，這裡也只動 customCategories。
+   */
+  function removeCategory(id: CategoryId): boolean {
+    if (allWorks.value.some((work) => work.category === id)) return false
+    customCategories.value = customCategories.value.filter((category) => category.id !== id)
+    persist()
+    return true
+  }
+
+  function addExhibition(exhibition: Exhibition): void {
+    exhibitions.value = [...exhibitions.value, exhibition]
+    persist()
+  }
+
+  function updateExhibition(id: string, patch: Partial<Exhibition>): void {
+    exhibitions.value = exhibitions.value.map((exhibition) =>
+      exhibition.id === id ? { ...exhibition, ...patch } : exhibition,
+    )
+    persist()
+  }
+
+  function removeExhibition(id: string): void {
+    exhibitions.value = exhibitions.value.filter((exhibition) => exhibition.id !== id)
+    persist()
+  }
+
+  /** 匯出整份 document（含圖片 base64），這是把編輯結果帶離這台瀏覽器的唯一途徑 */
   async function exportJson(): Promise<string> {
     const works = await Promise.all(
       customWorks.value.map(async (work) => {
@@ -208,12 +313,28 @@ export function useLibrary() {
         }
       }),
     )
-    return JSON.stringify({ version: 1, works, overrides: overrides.value, hidden: hidden.value }, null, 2)
+    return JSON.stringify(
+      {
+        schemaVersion: 2,
+        works,
+        categories: customCategories.value,
+        exhibitions: exhibitions.value,
+        overrides: overrides.value,
+        hidden: hidden.value,
+      },
+      null,
+      2,
+    )
   }
 
+  /** 匯入。同時吃 v1（`version:1`，無分類／展覽）與 v2（`schemaVersion:2`） */
   async function importJson(text: string): Promise<void> {
     const parsed = JSON.parse(text) as {
+      version?: number
+      schemaVersion?: number
       works?: (StoredWork & { thumbData: string; viewData: string })[]
+      categories?: StoredCategory[]
+      exhibitions?: Exhibition[]
       overrides?: Record<string, Partial<Work>>
       hidden?: string[]
     }
@@ -232,22 +353,31 @@ export function useLibrary() {
       ]
     }
 
+    if (parsed.categories) customCategories.value = parsed.categories
+    if (parsed.exhibitions) exhibitions.value = parsed.exhibitions
     if (parsed.overrides) overrides.value = parsed.overrides
     if (parsed.hidden) hidden.value = parsed.hidden
-    persistCustom()
-    writeJson(OVERRIDE_KEY, overrides.value)
-    writeJson(HIDDEN_KEY, hidden.value)
+    persist()
   }
 
   return {
     ready,
     allWorks,
+    categories,
+    customCategories,
+    exhibitions,
     init,
     addWork,
     updateWork,
     replaceImage,
     removeWork,
     restorePresets,
+    addCategory,
+    updateCategory,
+    removeCategory,
+    addExhibition,
+    updateExhibition,
+    removeExhibition,
     exportJson,
     importJson,
   }

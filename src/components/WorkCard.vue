@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { Work } from '@/types'
-import { CATEGORY_MAP } from '@/data/categories'
+import { categoryOf } from '@/data/categories'
+import { useLibrary } from '@/composables/useLibrary'
 import { ASPECT_RATIO } from '@/utils/placeholder'
 
 /**
@@ -14,7 +15,8 @@ import { ASPECT_RATIO } from '@/utils/placeholder'
 const props = defineProps<{ work: Work }>()
 const emit = defineEmits<{ open: [id: string] }>()
 
-const category = computed(() => CATEGORY_MAP[props.work.category])
+const { categories } = useLibrary()
+const category = computed(() => categoryOf(props.work.category, categories.value))
 const ratio = computed(() => ASPECT_RATIO[props.work.aspect])
 </script>
 
