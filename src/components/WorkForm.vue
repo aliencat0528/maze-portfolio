@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue'
 import type { AspectId, CategoryId, Work, WorkLink } from '@/types'
-import type { WorkDraft } from '@/composables/useLibrary'
-import { CATEGORIES } from '@/data/categories'
+import { useLibrary, type WorkDraft } from '@/composables/useLibrary'
 import { detectAspect } from '@/utils/image'
 
 /** 作品欄位表單。新增與編輯共用，差別只在要不要求上傳圖片 */
@@ -35,6 +34,7 @@ const draft = reactive({
   links: '',
 })
 
+const { categories } = useLibrary()
 const file = ref<File | null>(null)
 const error = ref('')
 
@@ -150,7 +150,7 @@ function submit() {
           class="field__input"
         >
           <option
-            v-for="category in CATEGORIES"
+            v-for="category in categories"
             :key="category.id"
             :value="category.id"
           >

@@ -4,7 +4,7 @@ import type { BackgroundId, Work } from '@/types'
 import type { WorkDraft } from '@/composables/useLibrary'
 import WorkForm from '@/components/WorkForm.vue'
 import { BACKGROUNDS } from '@/data/backgrounds'
-import { CATEGORY_MAP } from '@/data/categories'
+import { categoryOf } from '@/data/categories'
 import { useLibrary } from '@/composables/useLibrary'
 import { useSettings } from '@/composables/useSettings'
 
@@ -18,7 +18,7 @@ import { useSettings } from '@/composables/useSettings'
 const emit = defineEmits<{ close: [] }>()
 
 const { settings, update } = useSettings()
-const { allWorks, addWork, updateWork, replaceImage, removeWork, restorePresets, exportJson, importJson } =
+const { allWorks, categories, addWork, updateWork, replaceImage, removeWork, restorePresets, exportJson, importJson } =
   useLibrary()
 
 const tab = ref<'site' | 'works'>('site')
@@ -319,7 +319,7 @@ function pickBackground(id: BackgroundId) {
               <span class="work-row__meta">
                 <span class="work-row__title">{{ work.title }}</span>
                 <span class="work-row__sub">
-                  {{ CATEGORY_MAP[work.category].label }} · {{ work.year }}
+                  {{ categoryOf(work.category, categories).label }} · {{ work.year }}
                   <em v-if="work.custom">· 自訂</em>
                 </span>
               </span>

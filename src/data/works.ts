@@ -1,5 +1,5 @@
 import type { AspectId, CategoryId, Work, WorkLink } from '@/types'
-import { CATEGORY_MAP } from '@/data/categories'
+import { categoryOf } from '@/data/categories'
 import { ASPECT_SIZE, createPlaceholder } from '@/utils/placeholder'
 
 /**
@@ -24,7 +24,7 @@ interface WorkSeed {
 }
 
 function toWork(seed: WorkSeed): Work {
-  const { accent } = CATEGORY_MAP[seed.category].theme
+  const { accent } = categoryOf(seed.category).theme
   const image = createPlaceholder(seed.id, seed.aspect, accent)
   const { width, height } = ASPECT_SIZE[seed.aspect]
 
@@ -35,7 +35,7 @@ function toWork(seed: WorkSeed): Work {
     thumb: image,
     width,
     height,
-    alt: `${seed.title}——${CATEGORY_MAP[seed.category].label}，${seed.media.join('、')}`,
+    alt: `${seed.title}——${categoryOf(seed.category).label}，${seed.media.join('、')}`,
   }
 }
 
