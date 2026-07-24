@@ -162,4 +162,74 @@ describe('useGallery', () => {
       expect(gallery.selectedWork.value).toBeNull()
     })
   })
+
+  describe('展覽模式（依展覽）', () => {
+    async function withExhibition(workIds: string[], id = 'ex-1') {
+      const gallery = await freshGallery()
+      const { useLibrary } = await import('@/composables/useLibrary')
+      useLibrary().addExhibition({ id, title: '首展', preface: '開場白', workIds })
+      return gallery
+    }
+
+    it('依展覽顯示作品，且順序照 workIds 而非自然序', async () => {
+      const gallery = await withExhibition(['wtc-001', 'acr-001', 'anm-002'])
+      gallery.setMode('exhibition')
+
+      expect(gallery.filteredWorks.value.map((w) => w.id)).toEqual(['wtc-001', 'acr-001', 'anm-002'])
+    })
+
+    it('動線裡已刪除的作品 id 會被略過，不留空洞', async () => {
+      const gallery = await withExhibition(['acr-001', 'does-not-exist', 'wtc-001'])
+      gallery.setMode('exhibition')
+
+      expect(gallery.filteredWorks.value.map((w) => w.id)).toEqual(['acr-001', 'wtc-001'])
+    })
+
+    it('切到展覽模式把網址帶上 ?m=ex&ex=，且自動選第一個展覽', async () => {
+      const gallery = await withExhibition(['acr-001'])
+      gallery.setMode('exhibition')
+
+      expect(gallery.activeExhibitionId.value).toBe('ex-1')
+      expect(query()).toBe('?m=ex&ex=ex-1')
+    })
+
+    it('上一件／下一件走展覽動線的順序', async () => {
+      const gallery = await withExhibition(['anm-002', 'acr-001'])
+      gallery.setMode('exhibition')
+      gallery.openWork('anm-002')
+
+      gallery.stepWork(1)
+      expect(gallery.selectedWork.value?.id).toBe('acr-001')
+    })
+
+    it('切回依媒材模式清掉展覽狀態與網址', async () => {
+      const gallery = await withExhibition(['acr-001'])
+      gallery.setMode('exhibition')
+      gallery.setMode('category')
+
+      expect(gallery.viewMode.value).toBe('category')
+      expect(gallery.activeExhibitionId.value).toBeNull()
+      expect(query()).toBe('')
+    })
+
+    it('深連結 ?m=ex&ex= 還原展覽模式與動線', async () => {
+      const gallery = await withExhibition(['acr-001', 'wtc-001'])
+      window.history.replaceState(null, '', '/?m=ex&ex=ex-1')
+      gallery.syncFromUrl()
+
+      expect(gallery.viewMode.value).toBe('exhibition')
+      expect(gallery.activeExhibitionId.value).toBe('ex-1')
+      expect(gallery.filteredWorks.value.map((w) => w.id)).toEqual(['acr-001', 'wtc-001'])
+    })
+
+    it('深連結到不存在的展覽 id 退回無選定，不留壞值', async () => {
+      const gallery = await withExhibition(['acr-001'])
+      window.history.replaceState(null, '', '/?m=ex&ex=nope')
+      gallery.syncFromUrl()
+
+      expect(gallery.viewMode.value).toBe('exhibition')
+      expect(gallery.activeExhibitionId.value).toBeNull()
+      expect(gallery.filteredWorks.value).toEqual([])
+    })
+  })
 })

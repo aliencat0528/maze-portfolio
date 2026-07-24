@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import type { FilterId, Work } from '@/types'
+import type { Work } from '@/types'
 import WorkCard from '@/components/WorkCard.vue'
 import { useIsWide } from '@/composables/useMediaQuery'
 
@@ -12,15 +12,15 @@ import { useIsWide } from '@/composables/useMediaQuery'
  * 窄螢幕＝垂直網格：手機上水平捲動會和頁面捲動打架，直接降級。
  */
 
-const props = defineProps<{ works: Work[]; active: FilterId }>()
+const props = defineProps<{ works: Work[]; viewKey: string }>()
 const emit = defineEmits<{ open: [id: string] }>()
 
 const isWide = useIsWide()
 const rail = ref<HTMLElement | null>(null)
 const progress = ref(0)
 
-/** 切換分類時換掉 key，讓卡片重新播放漸入並把長廊捲回起點 */
-const listKey = computed(() => props.active)
+/** 切換分類或展覽時換掉 key，讓卡片重新播放漸入並把長廊捲回起點 */
+const listKey = computed(() => props.viewKey)
 
 function updateProgress() {
   const el = rail.value
@@ -71,7 +71,7 @@ watch(
       v-if="works.length === 0"
       class="wall__empty"
     >
-      這個分類還沒有作品。
+      這裡還沒有作品。
     </p>
 
     <ul

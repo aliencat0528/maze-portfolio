@@ -15,10 +15,17 @@ const INTRO_KEY = 'artwall.intro.seen.v1'
 
 const {
   categories,
+  exhibitions,
+  viewMode,
   activeCategory,
+  activeExhibitionId,
+  activeExhibition,
   filteredWorks,
   selectedWork,
+  railKey,
   setCategory,
+  setMode,
+  setExhibition,
   openWork,
   closeWork,
   stepWork,
@@ -85,13 +92,24 @@ onBeforeUnmount(() => {
       :count="filteredWorks.length"
       :name="settings.name"
       :statement="settings.statement"
+      :view-mode="viewMode"
+      :exhibitions="exhibitions"
+      :active-exhibition-id="activeExhibitionId"
       @select="setCategory"
+      @select-mode="setMode"
+      @select-exhibition="setExhibition"
     />
 
     <main class="app__main">
+      <p
+        v-if="viewMode === 'exhibition' && activeExhibition?.preface"
+        class="app__preface"
+      >
+        {{ activeExhibition.preface }}
+      </p>
       <WorkRail
         :works="filteredWorks"
-        :active="activeCategory"
+        :view-key="railKey"
         @open="openWork"
       />
     </main>
@@ -147,6 +165,17 @@ onBeforeUnmount(() => {
   flex-direction: column;
   justify-content: center;
   min-height: 0;
+}
+
+/* 展覽前言：策展動線的開場白，置於長廊之上 */
+.app__preface {
+  max-width: 60ch;
+  margin: 0 auto;
+  padding: 0 var(--page-x);
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--ink-soft);
+  text-align: center;
 }
 
 .app__footer {

@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted, provide, ref } from 'vue'
 import SiteTab from '@/components/editor/SiteTab.vue'
 import WorksTab from '@/components/editor/WorksTab.vue'
 import CategoriesTab from '@/components/editor/CategoriesTab.vue'
+import ExhibitionsTab from '@/components/editor/ExhibitionsTab.vue'
 import { EDITOR_STATUS } from '@/components/editor/status'
 
 /**
@@ -15,11 +16,12 @@ import { EDITOR_STATUS } from '@/components/editor/status'
 
 const emit = defineEmits<{ close: [] }>()
 
-type Tab = 'site' | 'works' | 'categories'
+type Tab = 'site' | 'works' | 'categories' | 'exhibitions'
 const TABS: { id: Tab; label: string }[] = [
   { id: 'site', label: '站台' },
   { id: 'works', label: '作品' },
   { id: 'categories', label: '分類' },
+  { id: 'exhibitions', label: '展覽' },
 ]
 const tab = ref<Tab>('site')
 
@@ -86,7 +88,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     <div class="editor__body">
       <SiteTab v-if="tab === 'site'" />
       <WorksTab v-else-if="tab === 'works'" />
-      <CategoriesTab v-else />
+      <CategoriesTab v-else-if="tab === 'categories'" />
+      <ExhibitionsTab v-else />
     </div>
 
     <footer
