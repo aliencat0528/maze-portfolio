@@ -65,6 +65,10 @@ function buildUrl(): string {
     params.set('c', activeCategory.value)
   }
   if (selectedId.value) params.set('w', selectedId.value)
+  // `intro` 不屬於瀏覽狀態，但要跟著留在網址上——否則進站關掉開場後，
+  // 切一次分類就把旗標洗掉，下次 reload 開場又冒出來（E2E 與現場展示都會踩到）
+  const intro = new URLSearchParams(window.location.search).get('intro')
+  if (intro !== null) params.set('intro', intro)
   const query = params.toString()
   return `${window.location.pathname}${query ? `?${query}` : ''}`
 }

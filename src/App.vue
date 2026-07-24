@@ -11,8 +11,6 @@ import { useLibrary } from '@/composables/useLibrary'
 import { usePrefersReducedMotion } from '@/composables/useMediaQuery'
 import { useSettings } from '@/composables/useSettings'
 
-const INTRO_KEY = 'artwall.intro.seen.v1'
-
 const {
   categories,
   exhibitions,
@@ -43,34 +41,17 @@ useAppearance(
 const reducedMotion = usePrefersReducedMotion()
 const editorOpen = ref(false)
 
-/** localStorage 在 Safari 無痕模式會丟例外，不能讓開場判斷連累整站 */
-function readIntroSeen(): boolean {
-  try {
-    return window.localStorage.getItem(INTRO_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-function writeIntroSeen(): void {
-  try {
-    window.localStorage.setItem(INTRO_KEY, '1')
-  } catch {
-    // 存不了就算了，最多下次再播一次開場
-  }
-}
-
 const params = new URLSearchParams(window.location.search)
 
-// 已看過、系統要求減少動態、或帶著作品深連結進站 → 不播開場，直接進牆。
-// `?intro=1` 強制重播，方便重看與展示（減少動態設定仍優先）
+// 開場每次進站都播（不再記「已看過」旗標）。兩個例外：系統要求減少動態，
+// 以及帶著作品深連結進站（`?w=`）——那是要直接看某一件，開場只會擋路。
+// `?intro=0` 明確關掉，供 E2E 與現場展示使用。
 const showIntro = ref(
-  !reducedMotion.value && (params.get('intro') === '1' || (!readIntroSeen() && !params.has('w'))),
+  !reducedMotion.value && params.get('intro') !== '0' && !params.has('w'),
 )
 
 function finishIntro(): void {
   showIntro.value = false
-  writeIntroSeen()
 }
 
 onMounted(() => {
