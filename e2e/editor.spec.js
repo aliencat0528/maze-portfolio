@@ -105,6 +105,46 @@ test('刪除自訂作品後牆上不再有它，reload 也不會回來', async (
   await expect(page.getByRole('button', { name: `開啟作品：${TITLE}` })).toHaveCount(0)
 })
 
+const openCategoriesTab = (page) => openPanel(page, '分類')
+
+test('新增自訂分類後出現在篩選列與作品表單，reload 後仍在', async ({ page }) => {
+  await page.goto('./')
+  const panel = await openCategoriesTab(page)
+
+  await panel.getByRole('button', { name: '＋ 新增分類' }).click()
+  await panel.getByLabel('名稱').fill('複合媒材')
+  await panel.getByLabel('代號').fill('MIX')
+  await panel.getByRole('button', { name: '新增', exact: true }).click()
+
+  // 出現在自訂分類清單
+  await expect(panel.locator('.cat-row', { hasText: '複合媒材' })).toBeVisible()
+  await panel.getByRole('button', { name: '關閉編輯面板' }).click()
+
+  // 站頭篩選列多了這個分類
+  await expect(page.getByRole('button', { name: /複合媒材/ })).toBeVisible()
+
+  // reload 後仍在（來自 artwall.library.v2）
+  await page.reload()
+  await expect(page.getByRole('button', { name: /複合媒材/ })).toBeVisible()
+})
+
+test('沒有作品使用的自訂分類可以刪除', async ({ page }) => {
+  await page.goto('./')
+  const panel = await openCategoriesTab(page)
+
+  await panel.getByRole('button', { name: '＋ 新增分類' }).click()
+  await panel.getByLabel('名稱').fill('暫用分類')
+  await panel.getByLabel('代號').fill('TMP')
+  await panel.getByRole('button', { name: '新增', exact: true }).click()
+
+  await panel
+    .locator('.cat-row', { hasText: '暫用分類' })
+    .getByRole('button', { name: '刪除' })
+    .click()
+
+  await expect(panel.locator('.cat-row', { hasText: '暫用分類' })).toHaveCount(0)
+})
+
 test('隱藏內建作品後 reload 仍然是隱藏的，還原內建作品可救回', async ({ page }) => {
   await page.goto('./')
   const panel = await openWorksTab(page)
