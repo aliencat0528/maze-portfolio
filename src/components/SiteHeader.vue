@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import type { Category, FilterId } from '@/types'
+import type { Category, Exhibition, FilterId } from '@/types'
 
-/** 站頭：左為作者資訊，右為分類切換（原本的顏色切換改為分類切換，見 MR-008） */
+/**
+ * 站頭：左為作者資訊，右為瀏覽切換。
+ * 分類切換取代原本的顏色切換（MR-008）；當存在展覽時，多一排「依媒材／依展覽」
+ * 模式切換（MR-012 ④）——沒有展覽就完全不顯示，主頁面維持原樣。
+ */
+
+type ViewMode = 'category' | 'exhibition'
 
 defineProps<{
   categories: Category[]
@@ -9,9 +15,16 @@ defineProps<{
   count: number
   name: string
   statement: string
+  viewMode: ViewMode
+  exhibitions: Exhibition[]
+  activeExhibitionId: string | null
 }>()
 
-const emit = defineEmits<{ select: [id: FilterId] }>()
+const emit = defineEmits<{
+  select: [id: FilterId]
+  selectMode: [mode: ViewMode]
+  selectExhibition: [id: string]
+}>()
 </script>
 
 <template>
@@ -27,37 +40,93 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
 
     <nav
       class="header__nav"
-      aria-label="作品分類"
+      aria-label="作品瀏覽"
     >
-      <ul class="filters">
-        <li>
-          <button
-            type="button"
-            class="filter"
-            :class="{ 'is-active': active === 'all' }"
-            :aria-pressed="active === 'all'"
-            @click="emit('select', 'all')"
-          >
-            <span class="filter__code">ALL</span>
-            <span class="filter__label">全部</span>
-          </button>
-        </li>
-        <li
-          v-for="category in categories"
-          :key="category.id"
+      <div class="header__controls">
+        <!-- 有展覽才顯示模式切換；否則主頁面維持只有分類列 -->
+        <div
+          v-if="exhibitions.length > 0"
+          class="modes"
+          role="group"
+          aria-label="瀏覽模式"
         >
           <button
             type="button"
-            class="filter"
-            :class="{ 'is-active': active === category.id }"
-            :aria-pressed="active === category.id"
-            @click="emit('select', category.id)"
+            class="mode"
+            :class="{ 'is-active': viewMode === 'category' }"
+            :aria-pressed="viewMode === 'category'"
+            @click="emit('selectMode', 'category')"
           >
-            <span class="filter__code">{{ category.code }}</span>
-            <span class="filter__label">{{ category.label }}</span>
+            依媒材
           </button>
-        </li>
-      </ul>
+          <button
+            type="button"
+            class="mode"
+            :class="{ 'is-active': viewMode === 'exhibition' }"
+            :aria-pressed="viewMode === 'exhibition'"
+            @click="emit('selectMode', 'exhibition')"
+          >
+            依展覽
+          </button>
+        </div>
+
+        <ul
+          v-if="viewMode === 'exhibition'"
+          class="filters"
+          aria-label="展覽"
+        >
+          <li
+            v-for="exhibition in exhibitions"
+            :key="exhibition.id"
+          >
+            <button
+              type="button"
+              class="filter"
+              :class="{ 'is-active': activeExhibitionId === exhibition.id }"
+              :aria-pressed="activeExhibitionId === exhibition.id"
+              @click="emit('selectExhibition', exhibition.id)"
+            >
+              <span class="filter__code">展</span>
+              <span class="filter__label">{{ exhibition.title }}</span>
+            </button>
+          </li>
+        </ul>
+
+        <ul
+          v-else
+          class="filters"
+          aria-label="作品分類"
+        >
+          <li>
+            <button
+              type="button"
+              class="filter"
+              :class="{ 'is-active': active === 'all' }"
+              :aria-pressed="active === 'all'"
+              @click="emit('select', 'all')"
+            >
+              <span class="filter__code">ALL</span>
+              <span class="filter__label">全部</span>
+            </button>
+          </li>
+          <li
+            v-for="category in categories"
+            :key="category.id"
+          >
+            <button
+              type="button"
+              class="filter"
+              :class="{ 'is-active': active === category.id }"
+              :aria-pressed="active === category.id"
+              @click="emit('select', category.id)"
+            >
+              <span class="filter__code">{{ category.code }}</span>
+              <span class="filter__label">{{ category.label }}</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <p
         class="header__count"
         aria-live="polite"
@@ -112,8 +181,43 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
 
 .header__nav {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 1rem;
+}
+
+.header__controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.modes {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.mode {
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--card-radius);
+  cursor: pointer;
+  transition: color 200ms var(--ease), border-color 200ms var(--ease);
+}
+
+.mode:hover {
+  border-color: var(--line-strong);
+}
+
+.mode.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .filters {
@@ -190,12 +294,13 @@ const emit = defineEmits<{ select: [id: FilterId] }>()
 
   .header__nav {
     width: 100%;
+    align-items: center;
     justify-content: space-between;
   }
 
-  .filters {
-    /* 窄螢幕讓分類列可橫向滑動，不換行擠壓版面 */
-    margin-right: 0.5rem;
+  .header__controls {
+    /* 窄螢幕讓控制列可橫向滑動，不換行擠壓版面 */
+    min-width: 0;
     padding-bottom: 0.25rem;
   }
 }

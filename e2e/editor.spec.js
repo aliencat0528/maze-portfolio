@@ -145,6 +145,38 @@ test('沒有作品使用的自訂分類可以刪除', async ({ page }) => {
   await expect(panel.locator('.cat-row', { hasText: '暫用分類' })).toHaveCount(0)
 })
 
+test('建立展覽後站頭出現「依展覽」，切換顯示前言與有序作品', async ({ page }) => {
+  await page.goto('./')
+  const panel = await openPanel(page, '展覽')
+
+  await panel.getByRole('button', { name: '＋ 新增展覽' }).click()
+  await panel.getByLabel('展覽名稱').fill('材料的記憶')
+  await panel.getByLabel('前言').fill('這條動線關於材料被使用時留下的痕跡。')
+
+  // 加入前兩件作品（加入後該列移到動線區，剩下的第一件遞補）
+  await panel.getByRole('button', { name: '＋ 加入' }).first().click()
+  await panel.getByRole('button', { name: '＋ 加入' }).first().click()
+  await panel.getByRole('button', { name: '新增', exact: true }).click()
+
+  await expect(panel.locator('.line-row', { hasText: '材料的記憶' })).toBeVisible()
+  await panel.getByRole('button', { name: '關閉編輯面板' }).click()
+
+  // 站頭出現「依展覽」模式切換
+  const exhibitionMode = page.getByRole('button', { name: '依展覽' })
+  await expect(exhibitionMode).toBeVisible()
+  await exhibitionMode.click()
+
+  // 前言顯示、牆上有作品
+  await expect(page.locator('.app__preface')).toContainText('材料被使用時留下的痕跡')
+  await expect(page.getByRole('button', { name: /^開啟作品：/ }).first()).toBeVisible()
+})
+
+test('沒有展覽時站頭不顯示模式切換——預設主頁面維持原樣', async ({ page }) => {
+  await page.goto('./')
+  await expect(page.getByRole('button', { name: '依展覽' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '依媒材' })).toHaveCount(0)
+})
+
 test('隱藏內建作品後 reload 仍然是隱藏的，還原內建作品可救回', async ({ page }) => {
   await page.goto('./')
   const panel = await openWorksTab(page)
